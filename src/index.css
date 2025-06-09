@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: #fff !important;
+}
+
+.ant-tabs-tab-active {
+    background-color: #019DA2 !important;
+}
+
+.ant-tabs-tab:hover {
+    background-color: #019DA2 !important;
+    color: #fff !important;
+}
+
+.ant-tabs-tab {
+    margin-bottom: 15px !important;
+    border-radius: 12px !important;
+    margin-right: 15px !important;
+    background-color: #fff;
+
+}
+
+.ant-upload-select {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+* {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+.ant-image-mask{
+    height: 150px !important;
+    border-radius: 50% !important;
+}
