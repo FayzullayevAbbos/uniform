@@ -1,6 +1,6 @@
+//auth
 export const baseUrl = 'https://idora.mininnovation.uz/api';
 
-//auth
 
 // departments
 export const departments = `/departments`;

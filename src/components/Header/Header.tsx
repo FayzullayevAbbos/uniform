@@ -7,6 +7,7 @@ import {setCollapsed} from '../../store/profile';
 import {RootState} from "../../store/store.ts";
 import ProfileInfo from "../settings/ProfileInfo.tsx";
 import EditProfile from "../settings/EditProfile.tsx";
+import {useNavigate} from "react-router-dom";
 
 
 interface HeaderProps {
@@ -15,6 +16,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({title}) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [profileIsOpen, setProfileIsOpen] = React.useState(false);
   const [editProfileIsOpen, setEditProfileIsOpen] = React.useState(false);
   const collapsed = useSelector((state: RootState) => state.profile.collapsed);
@@ -56,7 +58,10 @@ const Header: React.FC<HeaderProps> = ({title}) => {
     {
       key: 'logout',
       label: (
-        <div className="flex items-center ">
+        <div onClick={() => {
+          localStorage.clear()
+          window.location.reload()
+        }} className="flex items-center ">
           <LogOut size={16} className="mr-2"/>
           Logout
         </div>

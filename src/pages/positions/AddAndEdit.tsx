@@ -1,13 +1,13 @@
 import React, {useEffect} from "react";
 import {Button, Drawer, Form, Input, message, Radio} from "antd";
 import {useApiMutateMutation} from "../../service/Api.tsx";
-import {departments, rooms} from "../../service/URLs.ts";
+import {departments, positions, rooms} from "../../service/URLs.ts";
 
 interface AddSectionDrawerProps {
   open: boolean,
   onClose: () => void,
   editData?: { id:number; name: string; order: number; is_active: number | null } | null,
-  refetch?: never
+  refetch?: () => void | undefined | null | never
 }
 
 const AddAndEdit: React.FC<AddSectionDrawerProps> = ({
@@ -17,7 +17,7 @@ const AddAndEdit: React.FC<AddSectionDrawerProps> = ({
                                                        refetch
                                                      }) => {
   const [form] = Form.useForm();
-  const [mutate, {isLoading, isError, isSuccess}] = useApiMutateMutation()
+  const [mutate, {isLoading, isError}] = useApiMutateMutation()
   useEffect(() => {
     if (editData) {
       const body = {...editData, is_active: editData?.is_active ? true : false};
@@ -30,7 +30,7 @@ const AddAndEdit: React.FC<AddSectionDrawerProps> = ({
 
   const handleFinish  = async (values: {id:number; name: string; order: number; is_active: boolean }) =>  {
     const res =  await  mutate({
-      url: editData ? `${departments}/${editData.id}` : departments,
+      url: editData ? `${positions}/${editData.id}` : positions,
       method: editData ? 'PUT' : 'POST',
       body: {...values, is_active: values.is_active ? 1 : 0},
     })
