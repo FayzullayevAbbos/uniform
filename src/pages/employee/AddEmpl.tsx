@@ -1,31 +1,52 @@
-import {useState} from "react"
-import type {UploadFile} from "antd"
+import React, {useState} from "react"
 import {Button, Card, Col, DatePicker, Form, Input, message, Modal, Row, Select, Steps, Upload} from "antd"
 import {ArrowLeftIcon, ArrowRightIcon, FileIcon, ImageIcon, PlusIcon, SaveIcon, UserIcon} from "lucide-react"
 import {useApiMutateMutation, useApiRequestQuery} from "../../service/Api.tsx"
 import dayjs from "dayjs"
+import {PlusOutlined} from "@ant-design/icons";
 
 interface EmployeeAddModalProps {
   open: boolean
   onCancel: () => void
 }
 
-const { Step } = Steps
+interface ImageState {
+  left_image: string | null;
+  image: string | null;
+  right_image: string | null;
+}
 
-export default function EmployeeAddModal({ open, onCancel }: EmployeeAddModalProps) {
+const {Step} = Steps
+
+export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [basicForm] = Form.useForm()
-    const [positionForm] = Form.useForm()
-  const [fileList, setFileList] = useState<{
-    front: UploadFile[]
-    left: UploadFile[]
-    right: UploadFile[]
-  }>({ front: [], left: [], right: [] })
+  const [positionForm] = Form.useForm()
+  const [imgForm] = Form.useForm()
+
+  const [previewUrls, setPreviewUrls] = useState<ImageState>({
+    left_image: null,
+    image: null,
+    right_image: null
+  });
+
+  const [images, setImages] = useState<{
+    left_image: File | null;
+    image: File | null;
+    right_image: File | null;
+  }>({
+    left_image: null,
+    image: null,
+    right_image: null
+  });
 
   const [positions, setPositions] = useState<any[]>([{}])
 
+  const [basicInfo, setBasicInfo] = useState<any>({})
+  const [positionInfo, setPositionInfo] = useState<any>({})
 
-  const [mutate, {isError, isLoading}] = useApiMutateMutation()
+  const [mutate, {isError, isLoading, isSuccess}] = useApiMutateMutation()
+
   const regions = useApiRequestQuery({
     url: '/regions',
     method: 'GET',
@@ -53,6 +74,8 @@ export default function EmployeeAddModal({ open, onCancel }: EmployeeAddModalPro
     if (currentStep === 0) {
       try {
         await basicForm.validateFields()
+        console.log(basicForm.getFieldsValue())
+        setBasicInfo(basicForm.getFieldsValue())
         setCurrentStep(currentStep + 1)
       } catch (error) {
         message.error("Iltimos, barcha majburiy maydonlarni to'ldiring")
@@ -60,11 +83,13 @@ export default function EmployeeAddModal({ open, onCancel }: EmployeeAddModalPro
     } else if (currentStep === 1) {
       try {
         await positionForm.validateFields()
+        console.log(positionForm.getFieldsValue())
+        setPositionInfo(positionForm.getFieldsValue())
         setCurrentStep(currentStep + 1)
       } catch (error) {
         message.error("Iltimos, barcha majburiy maydonlarni to'ldiring")
       }
-    }else {
+    } else {
       setCurrentStep(currentStep + 1)
     }
   }
@@ -73,10 +98,6 @@ export default function EmployeeAddModal({ open, onCancel }: EmployeeAddModalPro
     setCurrentStep(currentStep - 1)
   }
 
-  const handleUploadChange = (info: any, type: "front" | "left" | "right") => {
-    let newFileList = [...info.fileList].slice(-1)
-    setFileList({ ...fileList, [type]: newFileList })
-  }
 
   const addPosition = () => {
     setPositions([...positions, {}])
@@ -84,35 +105,143 @@ export default function EmployeeAddModal({ open, onCancel }: EmployeeAddModalPro
 
   const handlePositionChange = (index: number, key: string, value: any) => {
     const updated = [...positions]
-    updated[index] = { ...updated[index], [key]: value }
+    updated[index] = {...updated[index], [key]: value}
     setPositions(updated)
   }
   const removePosition = (index: number) => {
     const updated = positions.filter((_, i) => i !== index);
     setPositions(updated);
   };
-  // console.log("Positions:", positions)
+
+
+  const handleBeforeUpload = (file, fieldName) => {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error('You can only upload image files!');
+      return Upload.LIST_IGNORE;
+    }
+
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error('Image must be smaller than 5MB!');
+      return Upload.LIST_IGNORE;
+    }
+
+    // Preview the image
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      setPreviewUrls(prev => ({
+        ...prev,
+        [fieldName]: reader.result
+      }));
+    };
+
+    setImages(prev => ({
+      ...prev,
+      [fieldName]: file
+    }));
+
+    return false; // Prevent automatic upload
+  };
+
+  const handleDeleteImage = (fieldName) => {
+    setPreviewUrls(prev => ({
+      ...prev,
+      [fieldName]: null
+    }));
+    setImages(prev => ({
+      ...prev,
+      [fieldName]: null
+    }));
+  };
 
   const handleSubmit = async () => {
-    try {
-      const basicInfo = await basicForm.validateFields()
+    const formData = new FormData();
 
-      const finalData = {
-        basicInfo,
-        education: positions,
-        files: fileList,
+    try {
+      // 1. Validate all forms first
+      await imgForm.validateFields();
+
+      // 2. Process basic info (including date formatting)
+      Object.entries(basicInfo).forEach(([key, value]) => {
+        if (value == null) return; // Skip undefined and null
+
+        // Handle date fields
+        if (key === 'birth_date' && value) {
+          const formattedDate = dayjs(value).isValid()
+            ? dayjs(value).format('YYYY-MM-DD')
+            : value;
+          formData.append(key, formattedDate);
+        }
+        // Handle other fields
+        else {
+          formData.append(key, value);
+        }
+      });
+
+      // 3. Add positions as JSON
+      if (positions && positions.length > 0) {
+        formData.append('informations', JSON.stringify(positions));
       }
 
-      console.log("Yuborilayotgan ma'lumot:", finalData)
-      await mutate(finalData)
+      // 4. Process image uploads
+      const imageFields = imgForm.getFieldsValue();
+      ['image', 'left_image', 'right_image'].forEach(key => {
+        const file = imageFields[key]?.fileList?.[0]?.originFileObj;
+        if (file) {
+          formData.append(key, file);
+          // Add filename if needed
+          formData.append(`${key}_filename`, file.name);
+        }
+      });
 
-      message.success("Xodim muvaffaqiyatli qo‘shildi")
-      onCancel()
+      // 5. Submit data
+      const res = await mutate({
+        url: '/employees',
+        method: 'POST',
+        body: formData,
+      });
+      if (res.data) {
+        setImages(null)
+        setPreviewUrls({
+          left_image: null,
+          image: null,
+          right_image: null
+        });
+        basicForm.resetFields();
+        positionForm.resetFields();
+        imgForm.resetFields();
+        setPositions([{}]);
+        setCurrentStep(0);
+        message.success("Xodim muvaffaqiyatli qo'shildi");
+        onCancel();
+      } else if (res?.error?.data?.errors) {
+
+        const errorFields = Object.entries(res?.error?.data?.errors).map(([field, errors]) => ({
+          name: field,
+          errors: errors,
+        }));
+        console.log(errorFields)
+        errorFields.map((field, index) => {
+          message.error(field.errors);
+        })
+
+      }
+
     } catch (error) {
-      console.error("Yuborish xatosi:", error)
-      message.error("Xatolik yuz berdi")
+      console.error("Submission error:", error);
+
+      // More specific error messages
+      if (error?.errorFields) {
+        message.error("Iltimos, barcha majburiy maydonlarni to'g'ri to'ldiring");
+      } else {
+        message.error(error.message || "Xodim qo'shishda xatolik yuz berdi");
+      }
+
+      return;
     }
-  }
+  };
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -124,26 +253,26 @@ export default function EmployeeAddModal({ open, onCancel }: EmployeeAddModalPro
                 <Form.Item
                   label="Ism"
                   name="first_name"
-                  rules={[{ required: true, message: "Iltimos, ismni kiriting" }]}
+                  rules={[{required: true, message: "Iltimos, ismni kiriting"}]}
                 >
-                  <Input placeholder="Ism" />
+                  <Input placeholder="Ism"/>
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item
                   label="Familiya"
                   name="last_name"
-                  rules={[{ required: true, message: "Iltimos, familiyani kiriting" }]}
+                  rules={[{required: true, message: "Iltimos, familiyani kiriting"}]}
                 >
-                  <Input placeholder="Familiya" />
+                  <Input placeholder="Familiya"/>
                 </Form.Item>
               </Col>
             </Row>
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item label="Otasining ismi" name="middle_name">
-              <Input placeholder="Otasining ismi" />
-            </Form.Item>
+                  <Input placeholder="Otasining ismi"/>
+                </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item
@@ -163,20 +292,20 @@ export default function EmployeeAddModal({ open, onCancel }: EmployeeAddModalPro
               <Col span={12}>
                 <Form.Item rules={[{required: true, message: "Iltimos, tug'ilgan sanasini kiriting"}]}
                            label="Tug'ilgan sana" name="birth_date">
-                  <DatePicker format="DD.MM.YYYY" style={{ width: "100%" }} />
+                  <DatePicker format="DD.MM.YYYY" style={{width: "100%"}}/>
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item rules={[{required: true, message: "Iltimos, tel raqam  kiriting"}]} label="Telefon raqami"
                            name="phone">
-                  <Input addonBefore="+998" placeholder="90 123 45 67" />
+                  <Input addonBefore="+998" placeholder="90 123 45 67"/>
                 </Form.Item>
               </Col>
             </Row>
             <Form.Item rules={[{required: true, message: "Iltimos,jinsini kiriting"}]} label="Jinsi" name="gender">
               <Select placeholder="Tanlang">
-                <Select.Option value="male">Erkak</Select.Option>
-                <Select.Option value="female">Ayol</Select.Option>
+                <Select.Option value="Male">Erkak</Select.Option>
+                <Select.Option value="Female">Ayol</Select.Option>
               </Select>
             </Form.Item>
             <Row gutter={16}>
@@ -298,27 +427,41 @@ export default function EmployeeAddModal({ open, onCancel }: EmployeeAddModalPro
                       </Form.Item>
                     </Col>
                     <Col span={8}>
-                      <Form.Item rules={[{required: true, message: "Iltimos sanani kiriting"}]} name={'start_date'}
-                                 label="Boshlangan sana">
+                      <Form.Item
+                        rules={[{required: true, message: "Iltimos sanani kiriting"}]}
+                        name={'start_date'}
+                        label="Boshlangan sana"
+                      >
                         <DatePicker
                           style={{ width: "100%" }}
                           format="DD.MM.YYYY"
-                          value={position.startDate ? dayjs(position.start_date) : undefined}
-                          onChange={(date, dateString) =>
-                            handlePositionChange(index, "start_date", dateString)
+                          value={position.start_date ? dayjs(position.start_date, 'YYYY-MM-DD') : undefined}
+                          onChange={(_date, dateString) =>
+                            handlePositionChange(
+                              index,
+                              "start_date",
+                              dayjs(_date, "DD.MM.YYYY").format("YYYY-MM-DD")
+                            )
                           }
                         />
                       </Form.Item>
                     </Col>
                     <Col span={8}>
-                      <Form.Item name={'end_date'} rules={[{required: true, message: "Iltimos sanani kiriting"}]}
-                                 label="Yakunlangan sana">
+                      <Form.Item
+                        name={'end_date'}
+                        rules={[{required: true, message: "Iltimos sanani kiriting"}]}
+                        label="Yakunlangan sana"
+                      >
                         <DatePicker
                           style={{ width: "100%" }}
                           format="DD.MM.YYYY"
-                          value={position.endDate ? dayjs(position.end_date) : undefined}
+                          value={position.end_date ? dayjs(position.end_date, 'YYYY-MM-DD') : undefined}
                           onChange={(_date, dateString) =>
-                            handlePositionChange(index, "end_date", dateString)
+                            handlePositionChange(
+                              index,
+                              "end_date",
+                              dayjs(_date, "DD.MM.YYYY").format("YYYY-MM-DD")
+                            )
                           }
                         />
                       </Form.Item>
@@ -329,10 +472,10 @@ export default function EmployeeAddModal({ open, onCancel }: EmployeeAddModalPro
             ))}
             <Button
               type="primary"
-              icon={<PlusIcon />}
+              icon={<PlusIcon/>}
               onClick={addPosition}
               block
-              style={{ marginTop: 8 }}
+              style={{marginTop: 8}}
             >
               Yana qo‘shish
             </Button>
@@ -341,45 +484,129 @@ export default function EmployeeAddModal({ open, onCancel }: EmployeeAddModalPro
 
       case 2:
         return (
-          <Row gutter={16}>
-            {["front", "left", "right"].map((type) => (
-              <Col span={8} key={type}>
-                <Card
-                  style={{ textAlign: "center", height: 200 }}
-                  bodyStyle={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
+          <Form form={imgForm} layout={'vertical'}>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item
+                  name="left_image"
+                  label="Left Image"
+                  rules={[{required: true, message: "Please upload an image"}]}
                 >
                   <Upload
-                    name={type}
+                    accept="image/*"
                     listType="picture-card"
                     showUploadList={false}
-                    fileList={fileList[type as keyof typeof fileList]}
-                    onChange={(info) =>
-                      handleUploadChange(info, type as "front" | "left" | "right")
-                    }
-                    beforeUpload={() => false}
+                    beforeUpload={(file) => handleBeforeUpload(file, 'left_image')}
+                    className="!w-full h-[300px]"
                   >
-                    <div>
-                      <ImageIcon />
-                      <div style={{ marginTop: 8 }}>Rasm qo‘shish</div>
-                    </div>
+                    {previewUrls.left_image ? (
+                      <img
+                        src={previewUrls.left_image}
+                        alt="Preview"
+                        style={{width: "100%", height: "100%", objectFit: "cover", borderRadius: 8}}
+                      />
+                    ) : (
+                      <div>
+                        <PlusOutlined/>
+                        <div style={{marginTop: 8}}>Add Image</div>
+                      </div>
+                    )}
                   </Upload>
-                  <div style={{ marginTop: "auto" }}>
-                    {type === "front"
-                      ? "To‘g‘ri"
-                      : type === "left"
-                        ? "Chap"
-                        : "O‘ng"} rasmi
-                  </div>
-                </Card>
+
+                  {previewUrls.left_image && (
+                    <Button
+                      className="mt-2"
+                      danger
+                      block
+                      onClick={() => handleDeleteImage('left_image')}
+                    >
+                      Delete Image
+                    </Button>
+                  )}
+                </Form.Item>
               </Col>
-            ))}
-          </Row>
+
+              <Col span={8}>
+                <Form.Item
+                  name="image"
+                  label="Center Image"
+                  rules={[{required: true, message: "Please upload an image"}]}
+                >
+                  <Upload
+                    accept="image/*"
+                    listType="picture-card"
+                    showUploadList={false}
+                    beforeUpload={(file) => handleBeforeUpload(file, 'image')}
+                    className="!w-full h-[300px]"
+                  >
+                    {previewUrls.image ? (
+                      <img
+                        src={previewUrls.image}
+                        alt="Preview"
+                        style={{width: "100%", height: "100%", objectFit: "cover", borderRadius: 8}}
+                      />
+                    ) : (
+                      <div>
+                        <PlusOutlined/>
+                        <div style={{marginTop: 8}}>Add Image</div>
+                      </div>
+                    )}
+                  </Upload>
+
+                  {previewUrls.image && (
+                    <Button
+                      className="mt-2"
+                      danger
+                      block
+                      onClick={() => handleDeleteImage('image')}
+                    >
+                      Delete Image
+                    </Button>
+                  )}
+                </Form.Item>
+              </Col>
+
+              <Col span={8}>
+                <Form.Item
+                  name="right_image"
+                  label="Right Image"
+                  rules={[{required: true, message: "Please upload an image"}]}
+                >
+                  <Upload
+                    accept="image/*"
+                    listType="picture-card"
+                    showUploadList={false}
+                    beforeUpload={(file) => handleBeforeUpload(file, 'right_image')}
+                    className="!w-full h-[300px]"
+                  >
+                    {previewUrls.right_image ? (
+                      <img
+                        src={previewUrls.right_image}
+                        alt="Preview"
+                        style={{width: "100%", height: "100%", objectFit: "cover", borderRadius: 8}}
+                      />
+                    ) : (
+                      <div>
+                        <PlusOutlined/>
+                        <div style={{marginTop: 8}}>Add Image</div>
+                      </div>
+                    )}
+                  </Upload>
+
+                  {previewUrls.right_image && (
+                    <Button
+                      className="mt-2"
+                      danger
+                      block
+                      onClick={() => handleDeleteImage('right_image')}
+                    >
+                      Delete Image
+                    </Button>
+                  )}
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
         )
 
       default:
@@ -397,42 +624,42 @@ export default function EmployeeAddModal({ open, onCancel }: EmployeeAddModalPro
       title="Xodim qo‘shish"
     >
       <>
-      <div className={'grid grid-cols-4 gap-6'}>
-        <Steps
-          direction="vertical"
-          className={'col-span-1 mt-10 border-r'}
-          current={currentStep}
-          size="small"
-          style={{marginBottom: 0, flex: 1}}
-        >
-            <Step title="Asosiy ma'lumotlar" icon={<UserIcon />} />
-            <Step title="Ma'lumoti" icon={<FileIcon />} />
-            <Step title="Rasmlar" icon={<ImageIcon />} />
-        </Steps>
-
-        <div style={{marginTop: 24}} className={'col-span-3 '}>{renderStepContent()}</div>
-      </div>
-
-      <div style={{ marginTop: 24, textAlign: "right" }}>
-        {currentStep > 0 && (
-          <Button
-            onClick={handlePrev}
-            style={{ marginRight: 8 }}
-            icon={<ArrowLeftIcon className={'mt-1'}/>}
+        <div className={'grid grid-cols-4 gap-6'}>
+          <Steps
+            direction="vertical"
+            className={'col-span-1 mt-10 border-r'}
+            current={currentStep}
+            size="small"
+            style={{marginBottom: 0, flex: 1}}
           >
-            Orqaga
-          </Button>
-        )}
-        {currentStep < 2 ? (
-          <Button type="primary" onClick={handleNext} icon={<ArrowRightIcon className={'mt-1'}/>}>
-            Keyingi
-          </Button>
-        ) : (
-          <Button type="primary" icon={<SaveIcon className={'mt-1'}/>} onClick={handleSubmit}>
-            Saqlash
-          </Button>
-        )}
-      </div>
+            <Step title="Asosiy ma'lumotlar" icon={<UserIcon/>}/>
+            <Step title="Ma'lumoti" icon={<FileIcon/>}/>
+            <Step title="Rasmlar" icon={<ImageIcon/>}/>
+          </Steps>
+
+          <div style={{marginTop: 24}} className={'col-span-3 '}>{renderStepContent()}</div>
+        </div>
+
+        <div style={{marginTop: 24, textAlign: "right"}}>
+          {currentStep > 0 && (
+            <Button
+              onClick={handlePrev}
+              style={{marginRight: 8}}
+              icon={<ArrowLeftIcon className={'mt-1'}/>}
+            >
+              Orqaga
+            </Button>
+          )}
+          {currentStep < 2 ? (
+            <Button type="primary" onClick={handleNext} icon={<ArrowRightIcon className={'mt-1'}/>}>
+              Keyingi
+            </Button>
+          ) : (
+            <Button type="primary" icon={<SaveIcon className={'mt-1'}/>} onClick={handleSubmit}>
+              Saqlash
+            </Button>
+          )}
+        </div>
       </>
     </Modal>
   )
