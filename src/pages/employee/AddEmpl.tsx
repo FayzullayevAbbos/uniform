@@ -1,13 +1,83 @@
-import React, {useState} from "react"
+import React, {useEffect, useState} from "react"
 import {Button, Card, Col, DatePicker, Form, Input, message, Modal, Row, Select, Steps, Upload} from "antd"
 import {ArrowLeftIcon, ArrowRightIcon, FileIcon, ImageIcon, PlusIcon, SaveIcon, UserIcon} from "lucide-react"
 import {useApiMutateMutation, useApiRequestQuery} from "../../service/Api.tsx"
 import dayjs from "dayjs"
 import {PlusOutlined} from "@ant-design/icons";
+import {employees} from "../../service/URLs.ts";
+
+export interface Department {
+  id: number
+  name: string
+  order: number
+  is_active: number
+  created_at: string
+}
+
+export interface Position {
+  id: number
+  name: string
+  order: number
+  is_active: number
+  created_at: string
+}
+
+export interface Room {
+  id: number
+  name: string
+  room_number: number
+  order: number
+  is_active: number
+  created_at: string
+}
+
+export interface Region {
+  id: number
+  oz: string
+}
+
+export interface District {
+  id: number
+  region_id: number
+  oz: string
+}
+
+export interface Information {
+  id: number
+  employee_id: number
+  name: string
+  type: string
+  start_date: string
+  end_date: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Employee {
+  id: number
+  department: Department
+  position: Position
+  room: Room
+  region: Region
+  district: District
+  last_name: string
+  first_name: string
+  middle_name: string
+  birth_date: string
+  phone: string
+  pin: string
+  image: string
+  right_image: string
+  left_image: string
+  gender: string
+  informations: Information[]
+}
 
 interface EmployeeAddModalProps {
   open: boolean
   onCancel: () => void
+  refetch?: () => void
+  editData?: Employee | any | null
 }
 
 interface ImageState {
@@ -18,11 +88,15 @@ interface ImageState {
 
 const {Step} = Steps
 
-export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps) {
+export default function EmployeeAddModal({open, onCancel, refetch, editData}: EmployeeAddModalProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [basicForm] = Form.useForm()
-  const [positionForm] = Form.useForm()
+  const [positionForm] = Form.useForm();
   const [imgForm] = Form.useForm()
+
+  useEffect(() => {
+    positionForm.setFieldsValue(editData?.informations?.[0] || {});
+  }, [editData])
 
   const [previewUrls, setPreviewUrls] = useState<ImageState>({
     left_image: null,
@@ -52,7 +126,7 @@ export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps
     method: 'GET',
   })
 
-  const {data: districts, refetch} = useApiRequestQuery({
+  const {data: districts, refetch: districtRefetch} = useApiRequestQuery({
     url: `/region/${basicForm.getFieldValue('region_id')}/districts`,
     method: 'GET',
   })
@@ -70,10 +144,89 @@ export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps
   })
   const selectRegion = basicForm.getFieldValue('region_id')
 
+  function populateEmployeeForm(editData: Employee) {
+    if (!editData) return;
+
+    // Basic Info
+    basicForm.setFieldsValue({
+      first_name: editData.first_name,
+      last_name: editData.last_name,
+      middle_name: editData.middle_name,
+      birth_date: dayjs(editData.birth_date),
+      phone: editData.phone,
+      pin: editData.pin,
+      department_id: editData.department?.id,
+      position_id: editData.position?.id,
+      room_id: editData.room?.id,
+      region_id: editData.region?.id,
+      district_id: editData.district?.id,
+      gender: editData.gender
+    });
+
+    // Position Info
+    if (editData?.informations?.length) {
+      const initialValues: any = {}
+
+      editData.informations.forEach((info, index) => {
+        initialValues[`name_${index}`] = info.name
+        initialValues[`type_${index}`] = info.type
+        initialValues[`start_date_${index}`] = dayjs(info.start_date)
+        initialValues[`end_date_${index}`] = dayjs(info.end_date)
+      })
+
+      positionForm.setFieldsValue(initialValues)
+    }
+
+    // Images preview
+    setPreviewUrls({
+      image: editData.image || null,
+      left_image: editData.left_image || null,
+      right_image: editData.right_image || null,
+    });
+
+    // Save for state if needed
+    setBasicInfo({
+      first_name: editData.first_name,
+      last_name: editData.last_name,
+      middle_name: editData.middle_name,
+      birth_date: editData.birth_date,
+      phone: editData.phone,
+      pin: editData.pin,
+    });
+
+    // Informations if needed later
+    if (Array.isArray(editData.informations)) {
+      setPositions(editData.informations.map(info => ({
+        ...info,
+        start_date: dayjs(info.start_date),
+        end_date: dayjs(info.end_date)
+      })));
+    }
+  }
+
+  useEffect(() => {
+    if (editData) {
+      populateEmployeeForm(editData);
+    } else {
+      basicForm.resetFields();
+      positionForm.resetFields();
+      imgForm.resetFields();
+      setCurrentStep(0)
+      setBasicInfo({});
+      setPositionInfo({});
+      setPositions([{}]);
+      setPreviewUrls({
+        left_image: null,
+        image: null,
+        right_image: null
+      });
+    }
+  }, [editData, basicForm, positionForm, imgForm, open]);
+
   const handleNext = async () => {
     if (currentStep === 0) {
       try {
-        await basicForm.validateFields()
+        // await basicForm.validateFields()
         console.log(basicForm.getFieldsValue())
         setBasicInfo(basicForm.getFieldsValue())
         setCurrentStep(currentStep + 1)
@@ -98,7 +251,6 @@ export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps
     setCurrentStep(currentStep - 1)
   }
 
-
   const addPosition = () => {
     setPositions([...positions, {}])
   }
@@ -108,11 +260,11 @@ export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps
     updated[index] = {...updated[index], [key]: value}
     setPositions(updated)
   }
+
   const removePosition = (index: number) => {
     const updated = positions.filter((_, i) => i !== index);
     setPositions(updated);
   };
-
 
   const handleBeforeUpload = (file, fieldName) => {
     const isImage = file.type.startsWith('image/');
@@ -145,7 +297,7 @@ export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps
     return false; // Prevent automatic upload
   };
 
-  const handleDeleteImage = (fieldName) => {
+  const handleDeleteImage = (fieldName:any) => {
     setPreviewUrls(prev => ({
       ...prev,
       [fieldName]: null
@@ -160,45 +312,46 @@ export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps
     const formData = new FormData();
 
     try {
-      // 1. Validate all forms first
-      await imgForm.validateFields();
-
-      // 2. Process basic info (including date formatting)
+      if (!editData) await imgForm.validateFields();
       Object.entries(basicInfo).forEach(([key, value]) => {
         if (value == null) return; // Skip undefined and null
-
-        // Handle date fields
         if (key === 'birth_date' && value) {
           const formattedDate = dayjs(value).isValid()
             ? dayjs(value).format('YYYY-MM-DD')
             : value;
           formData.append(key, formattedDate);
-        }
-        // Handle other fields
-        else {
+        } else {
           formData.append(key, value);
         }
       });
 
-      // 3. Add positions as JSON
       if (positions && positions.length > 0) {
-        formData.append('informations', JSON.stringify(positions));
+        const cleaned = positions.map(({ id, employee_id, name, type, start_date, end_date }) => ({
+          name,
+          id:employee_id,
+          type,
+          start_date: start_date ? dayjs(start_date).format('YYYY-MM-DD') : null,
+          end_date: end_date ? dayjs(end_date).format('YYYY-MM-DD') : null
+        }));
+
+        formData.append('informations', JSON.stringify(cleaned));
       }
 
-      // 4. Process image uploads
+
       const imageFields = imgForm.getFieldsValue();
       ['image', 'left_image', 'right_image'].forEach(key => {
         const file = imageFields[key]?.fileList?.[0]?.originFileObj;
         if (file) {
           formData.append(key, file);
           // Add filename if needed
-          formData.append(`${key}_filename`, file.name);
+          // formData.append(`${key}_filename`, file.name);
         }
-      });
 
-      // 5. Submit data
+      });
+      if (editData) formData.append('_method', "PUT");
+
       const res = await mutate({
-        url: '/employees',
+        url: editData ? `${employees}/${editData?.id}`: employees,
         method: 'POST',
         body: formData,
       });
@@ -215,6 +368,7 @@ export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps
         setPositions([{}]);
         setCurrentStep(0);
         message.success("Xodim muvaffaqiyatli qo'shildi");
+        refetch();
         onCancel();
       } else if (res?.error?.data?.errors) {
 
@@ -312,7 +466,7 @@ export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps
               <Col span={12}>
                 <Form.Item label="Viloyat" name="region_id"
                            rules={[{required: true, message: "Iltimos, viloyatni tanlang"}]}>
-                  <Select onChange={() => refetch()} placeholder="Viloyatni tanlang">
+                  <Select onChange={() => districtRefetch()} placeholder="Viloyatni tanlang">
                     {regions?.data?.data?.map((region) => (
                       <Select.Option key={region.id} value={region.id}>
                         {region.oz}
@@ -377,6 +531,7 @@ export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps
         )
 
       case 1:
+        console.log(positions)
         return (
           <div className={'h-[80vh] overflow-y-auto pb-3'}>
             {positions.map((position, index) => (
@@ -397,9 +552,10 @@ export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps
                 title={`Ma'lumot #${index + 1}`}>
                 <Form form={positionForm} layout="vertical">
                   <Form.Item
-                    name={'name'}
+                    name={`name_${index}`}
                     rules={[{required: true, message: "Iltimos, malumot kiriting"}]}
                     label="O‘quv nomi">
+                    {console.log(position.name)}
                     <Input
                       value={position.name}
                       onChange={(e) =>
@@ -411,7 +567,7 @@ export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps
 
                   <Row gutter={16}>
                     <Col span={8}>
-                      <Form.Item rules={[{required: true, message: "Iltimos tanlang"}]} name={'type'}
+                      <Form.Item rules={[{required: true, message: "Iltimos tanlang"}]} name={`type_${index}`}
                                  label="Ma'lumot turi">
                         <Select
                           value={position.type}
@@ -429,11 +585,11 @@ export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps
                     <Col span={8}>
                       <Form.Item
                         rules={[{required: true, message: "Iltimos sanani kiriting"}]}
-                        name={'start_date'}
+                        name={`start_date_${index}`}
                         label="Boshlangan sana"
                       >
                         <DatePicker
-                          style={{ width: "100%" }}
+                          style={{width: "100%"}}
                           format="DD.MM.YYYY"
                           value={position.start_date ? dayjs(position.start_date, 'YYYY-MM-DD') : undefined}
                           onChange={(_date, dateString) =>
@@ -448,12 +604,12 @@ export default function EmployeeAddModal({open, onCancel}: EmployeeAddModalProps
                     </Col>
                     <Col span={8}>
                       <Form.Item
-                        name={'end_date'}
+                        name={`end_date_${index}`}
                         rules={[{required: true, message: "Iltimos sanani kiriting"}]}
                         label="Yakunlangan sana"
                       >
                         <DatePicker
-                          style={{ width: "100%" }}
+                          style={{width: "100%"}}
                           format="DD.MM.YYYY"
                           value={position.end_date ? dayjs(position.end_date, 'YYYY-MM-DD') : undefined}
                           onChange={(_date, dateString) =>

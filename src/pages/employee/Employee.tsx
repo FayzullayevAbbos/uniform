@@ -1,10 +1,10 @@
-
 import React, {useState} from "react"
-import {Avatar, Button, DatePicker, Dropdown, Input, Select, Table, Typography} from "antd"
+import {Avatar, Button, DatePicker, Dropdown, Input, message, Modal, Select, Table, Typography} from "antd"
 import {
   DeleteOutlined,
   EditOutlined,
-  ExportOutlined, EyeOutlined,
+  ExportOutlined,
+  EyeOutlined,
   FilterOutlined,
   MoreOutlined,
   SearchOutlined
@@ -13,6 +13,8 @@ import type {ColumnsType} from "antd/es/table"
 import dayjs from "dayjs"
 import useQuery from "../../hooks/useQuery.tsx";
 import EmployeeAddModal from "./AddEmpl.tsx";
+import {useApiMutateMutation, useApiRequestQuery} from "../../service/Api.tsx";
+import {employees} from "../../service/URLs.ts";
 
 const {RangePicker} = DatePicker
 const {Option} = Select
@@ -31,166 +33,119 @@ interface DataType {
 const Employee: React.FC = () => {
   const {navigate} = useQuery()
   const [showModal, setShowModal] = useState(false)
-  const data: DataType[] = [
-    {
-      key: "1",
-      name: "Jenny Wilson",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [search, setSearch] = useState("")
+  const [sortField, setSortField] = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<string | null>(null)
+  const [editData, setEditData] = useState(null);
+  const [mutate] = useApiMutateMutation();
+  const {data, isLoading, refetch, isFetching} = useApiRequestQuery({
+    url: employees,
+    method: "GET",
+    params: {
+      page,
+      page_size: pageSize,
+      search,
+      sort_by: sortField
+        ? sortOrder === "desc"
+          ? `-${sortField}`
+          : sortField
+        : undefined,
     },
-    {
-      key: "2",
-      name: "Darrell Steward",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "3",
-      name: "Wade Warren",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "4",
-      name: "Eleanor Pena",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "5",
-      name: "Kristin Watson",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "6",
-      name: "Theresa Webb",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "7",
-      name: "Brooklyn Simmons",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "8",
-      name: "Ronald Richards",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "9",
-      name: "Savannah Nguyen",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "10",
-      name: "Jerome Bell",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-  ]
-  const columns: ColumnsType<DataType> = [
+  });
+
+  const handleDelete = (item: DataType) => {
+    Modal.confirm({
+      title: "Haqiqatan ham ushbu xodimni o‘chirmoqchimisiz?",
+      content: `${item.first_name} o‘chiriladi.`,
+      okText: "Ha, o‘chirish",
+      cancelText: "Bekor qilish",
+      okButtonProps: {danger: true},
+      onOk: async () => {
+        try {
+          await mutate({
+            url: `${employees}/${item?.id}/`,
+            method: "DELETE",
+          });
+          message.success("Muvaffaqiyatli o‘chirildi");
+          refetch();
+        } catch (error) {
+          message.error("O‘chirishda xatolik yuz berdi");
+        }
+      },
+    });
+  };
+
+  const columns: ColumnsType<any> = [
     {
       title: "Ism va Familiya",
       dataIndex: "name",
       key: "name",
-      render: (text, record) => (
+      render: (_, record) => (
         <div className="flex items-center gap-2">
-          <Avatar src={record.avatar}/>
-          <span>{text}</span>
+          <Avatar src={record.image}/>
+          <span>{record.first_name} {record.last_name}</span>
         </div>
       ),
+      width: '18%',
     },
     {
       title: "Bo'lim",
-      dataIndex: "position",
-      key: "position",
+      dataIndex: "department",
+      key: "department",
+      render: (department) => department?.name,
+      width: '13%',
     },
     {
       title: "Lavozim",
       dataIndex: "position",
       key: "position",
-      render: (_, record) => {
-        const positions: Record<string, string> = {
-          "1": "Pediatr",
-          "2": "Terapevt",
-          "3": "Xirurg",
-          "4": "Xirurg",
-          "5": "Xirurg",
-          "6": "Xirurg",
-          "7": "Xirurg",
-          "8": "Xirurg",
-          "9": "Xirurg",
-          "10": "Xirurg",
-        }
-        return positions[record.key] || "Xirurg"
-      },
+      render: (position) => position?.name,
+      width: '10%',
     },
     {
-      title: "Jarima turi",
-      dataIndex: "violation",
-      key: "violation",
+      title: "Xona",
+      dataIndex: "room",
+      key: "room",
+      render: (room) => <div className="line-clamp-2">{room?.name}</div>,
+      width: '17%',
     },
     {
-      title: "Jarima vaqti",
-      dataIndex: "date",
-      key: "date",
+      title: "Tug‘ilgan sana",
+      dataIndex: "birth_date",
+      key: "birth_date",
+      width: '8%',
     },
     {
-      title: "Jarima holati",
-      key: "status",
-      dataIndex: "status",
-      render: (text) => <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm">{text}</span>,
+      title: "Telefon",
+      dataIndex: "phone",
+      key: "phone",
+      width: '9%',
     },
     {
-      title: "Jarima holati",
+      title: "PINFL",
+      dataIndex: "pin",
+      key: "pin",
+      width: '10%',
+    },
+    {
+      title: "Amallar",
       key: "action",
+      width: '5%',
       render: (item) => {
         return (
           <Dropdown
-            overlayClassName="!w-[170px] "
+            overlayClassName="!w-[170px]"
             trigger={["click"]}
             menu={{
               items: [
                 {
                   key: "1",
                   label: (
-                    <Button  onClick={()=> navigate(`/employees/${item?.key}`)} className="flex items-center gap-2 !mx-0 !w-full !px-4">
-                      <EyeOutlined />
+                    <Button onClick={() => navigate(`/employees/${item?.id}`)}
+                            className="flex items-center gap-2 !mx-0 !w-full !px-4">
+                      <EyeOutlined/>
                       <span className="text-gray-500">Ko'rish</span>
                     </Button>
                   ),
@@ -198,7 +153,12 @@ const Employee: React.FC = () => {
                 {
                   key: "2",
                   label: (
-                    <Button className="flex items-center gap-2 !mx-0 !w-full !px-4">
+                    <Button
+                      onClick={() => {
+                        setEditData(item);
+                        setShowModal(true);
+                      }}
+                      className="flex items-center gap-2 !mx-0 !w-full !px-4">
                       <EditOutlined/>
                       <span className="text-gray-500">Tahrirlash</span>
                     </Button>
@@ -207,30 +167,31 @@ const Employee: React.FC = () => {
                 {
                   key: "3",
                   label: (
-                    <Button danger={true}  className="flex items-center gap-2 !mx-0 !w-full !px-4" >
-                      <DeleteOutlined />
+                    <Button onClick={() => handleDelete(item)} danger
+                            className="flex items-center gap-2 !mx-0 !w-full !px-4">
+                      <DeleteOutlined/>
                       <span className="text-gray-500">O'chirish</span>
                     </Button>
                   ),
                 },
-
               ],
             }}
           >
             <Button type="text" icon={<MoreOutlined/>}/>
           </Dropdown>
-        )
+        );
       },
     },
-  ]
+  ];
+
 
   return (
     <div className=" min-h-screen w-full">
       <div className=" shadow-sm">
         <div className="flex flex-col bg-white border !w-full rounded-2xl   px-4 pt-4">
-          <div className={'flex items-center  gap-4  pb-3 !text-3xl   !w-full  ' }>
-            <FilterOutlined className={'!text-3xl '}  />
-            <Title  className=" text-gray-500 align-text-bottom !m-0 !text-3xl ">
+          <div className={'flex items-center  gap-4  pb-3 !text-3xl   !w-full  '}>
+            <FilterOutlined className={'!text-3xl '}/>
+            <Title className=" text-gray-500 align-text-bottom !m-0 !text-3xl ">
               Filter
             </Title>
           </div>
@@ -244,13 +205,13 @@ const Employee: React.FC = () => {
             </div>
             <div>
               <Text className="block mb-2 text-gray-500">BO'LIMLAR BO'YICHA</Text>
-              <Select placeholder="Barchasi" className="w-full" >
+              <Select placeholder="Barchasi" className="w-full">
                 <Option value="all">Barchasi</Option>
               </Select>
             </div>
             <div>
               <Text className="block mb-2 text-gray-500">HOLATI BO'YICHA</Text>
-              <Select placeholder="Barchasi" className="w-full" >
+              <Select placeholder="Barchasi" className="w-full">
                 <Option value="all">Barchasi</Option>
               </Select>
             </div>
@@ -269,43 +230,53 @@ const Employee: React.FC = () => {
           <div
             className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4  pb-2 mb-2 border-b !w-full  ">
             <div className=" gap-2 w-full md:w-auto">
-              <Button type="default" icon={<ExportOutlined/>}  className="flex items-center">
+              <Button type="default" icon={<ExportOutlined/>} className="flex items-center">
                 Eksport qilish
               </Button>
             </div>
             <div className="flex gap-2 w-full md:w-auto">
               <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 placeholder="Qidirish"
                 prefix={<SearchOutlined className="text-gray-400"/>}
                 className="w-full md:w-[300px]"
               />
 
-                <Button
-                  type="primary"
-                  onClick={() => setShowModal(true)}
-                  style={{ backgroundColor: "#00ABA9", borderColor: "transparent" }}
-                >
-                  Yangi hodim qo'shish
-                </Button>
+              <Button
+                type="primary"
+                onClick={() => setShowModal(true)}
+                style={{backgroundColor: "#00ABA9", borderColor: "transparent"}}
+              >
+                Yangi hodim qo'shish
+              </Button>
 
-                <EmployeeAddModal open={showModal} onCancel={() => setShowModal(false)} />
+              <EmployeeAddModal refetch={refetch} open={showModal} editData={editData} onCancel={() => setShowModal(false)}/>
 
             </div>
           </div>
 
           <Table
             columns={columns}
-            dataSource={data}
+            loading={isLoading || isFetching}
+            dataSource={Array.isArray(data?.data) ? data.data : []}
             pagination={{
               position: ["bottomCenter"],
+              current: page,
+              pageSize: pageSize,
+              total: data?.total ?? 0,
+              onChange: (p, ps) => {
+                setPage(p)
+                setPageSize(ps)
+              },
+              showTotal: (total) => `${total} ta`,
               showSizeChanger: true,
               showQuickJumper: true,
-              total: 100,
-              showTotal: (total) => `${total} ta`,
-              defaultPageSize: 10,
             }}
-
+            scroll={{x: '100%'}}
+            rowKey="id"
           />
+
         </div>
       </div>
     </div>

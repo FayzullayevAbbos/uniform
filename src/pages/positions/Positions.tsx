@@ -62,8 +62,8 @@ const Positions: React.FC = () => {
 
   const handleDelete = (item: DataType) => {
     Modal.confirm({
-      title: "Haqiqatan ham ushbu bo‘limni o‘chirmoqchimisiz?",
-      content: `${item.name} bo‘limi o‘chiriladi.`,
+      title: "Haqiqatan ham ushbu lavozimni o‘chirmoqchimisiz?",
+      content: `${item.name}mi o‘chiriladi.`,
       okText: "Ha, o‘chirish",
       cancelText: "Bekor qilish",
       okButtonProps: { danger: true },
