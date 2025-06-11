@@ -1,127 +1,113 @@
 import React, {useState} from "react"
-import {Avatar, Button, DatePicker, Input, Select, Table, Typography} from "antd"
-import {ExportOutlined, FilterOutlined,  SearchOutlined} from "@ant-design/icons"
+import {Avatar, Button, DatePicker, Input, message, Modal, Select, Table, Typography} from "antd"
+import {ExportOutlined, FilePdfOutlined, FilterOutlined, SearchOutlined} from "@ant-design/icons"
 import type {ColumnsType} from "antd/es/table"
 import dayjs from "dayjs"
 import TechnicalInspectionModal from "./AddCheck.tsx";
+import {techical} from "../../service/URLs.ts";
+import useQuery from "../../hooks/useQuery.tsx";
+import {useApiMutateMutation, useApiRequestQuery} from "../../service/Api.tsx";
 
 const {RangePicker} = DatePicker
 const {Option} = Select
 const {Title, Text} = Typography
 
-interface DataType {
-  key: string
-  name: string
-  avatar: string
-  position: string
-  violation: string
-  date: string
-  status: string
-}
+type Department = {
+  id: number;
+  name: string;
+  order: number;
+  is_active: number;
+  created_at: string;
+};
+
+type Position = {
+  id: number;
+  name: string;
+  order: number;
+  is_active: number;
+  created_at: string;
+};
+
+type Employee = {
+  id: number;
+  department: Department;
+  position: Position;
+  last_name: string;
+  first_name: string;
+  middle_name: string;
+  image: string;
+};
+
+type DataType = {
+  id: number;
+  employee: Employee;
+  end_date: string;
+  start_date: string;
+  status: string;
+  files: []
+};
+
+
 
 const VehicleCheck: React.FC = () => {
   const [showModal, setShowModal] = useState(false)
-  const data: DataType[] = [
-    {
-      key: "1",
-      name: "Jenny Wilson",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
+  const {navigate} = useQuery();
+  const [open, setOpen] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<string | null>(null);
+  const [mutate] = useApiMutateMutation();
+
+  const {data, isLoading, refetch, isFetching} = useApiRequestQuery({
+    url: techical,
+    method: "GET",
+    params: {
+      page,
+      page_size: pageSize,
+      search,
+      sort_by: sortField
+        ? sortOrder === "desc"
+          ? `-${sortField}`
+          : sortField
+        : undefined,
     },
-    {
-      key: "2",
-      name: "Darrell Steward",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "3",
-      name: "Wade Warren",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "4",
-      name: "Eleanor Pena",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "5",
-      name: "Kristin Watson",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "6",
-      name: "Theresa Webb",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "7",
-      name: "Brooklyn Simmons",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "8",
-      name: "Ronald Richards",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "9",
-      name: "Savannah Nguyen",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-    {
-      key: "10",
-      name: "Jerome Bell",
-      avatar: "/placeholder.svg?height=40&width=40",
-      position: "Shifokorlar",
-      violation: "Bosh kiymisiz keldi",
-      date: "30.01.2025 17:37",
-      status: "Jarima qo'llanildi",
-    },
-  ]
+  });
+
+
+  const handleDelete = (item: DataType) => {
+    Modal.confirm({
+      title: "Haqiqatan ham ushbu xodimni o‘chirmoqchimisiz?",
+      content: `${item?.employee?.first_name} o‘chiriladi.`,
+      okText: "Ha, o‘chirish",
+      cancelText: "Bekor qilish",
+      okButtonProps: {danger: true},
+      onOk: async () => {
+        try {
+          await mutate({
+            url: `${techical}/${item?.id}/`,
+            method: "DELETE",
+          });
+          message.success("Muvaffaqiyatli o‘chirildi");
+          refetch();
+        } catch (error) {
+          message.error("O‘chirishda xatolik yuz berdi");
+        }
+      },
+    });
+  };
   const columns: ColumnsType<DataType> = [
     {
       title: "Ism va Familiya",
       dataIndex: "name",
       key: "name",
+        width: '15%',
       render: (text, record) => (
         <div className="flex items-center gap-2">
-          <Avatar src={record.avatar}/>
-          <span>{text}</span>
+          <Avatar src={record?.employee?.image}/>
+          <span>{record?.employee?.first_name} {record?.employee?.last_name}</span>
         </div>
       ),
     },
@@ -129,43 +115,116 @@ const VehicleCheck: React.FC = () => {
       title: "Bo'lim",
       dataIndex: "position",
       key: "position",
+        width: '15%',
+      render: (text, record) => (
+        <span>{record?.employee?.department?.name}</span>
+      ),
     },
     {
       title: "Lavozim",
       dataIndex: "position",
       key: "position",
+        width: '13%',
       render: (_, record) => {
-        const positions: Record<string, string> = {
-          "1": "Pediatr",
-          "2": "Terapevt",
-          "3": "Xirurg",
-          "4": "Xirurg",
-          "5": "Xirurg",
-          "6": "Xirurg",
-          "7": "Xirurg",
-          "8": "Xirurg",
-          "9": "Xirurg",
-          "10": "Xirurg",
-        }
-        return positions[record.key] || "Xirurg"
+        return (
+          <span>{record?.employee?.position?.name}</span>
+        )
       },
     },
     {
-      title: "Jarima turi",
-      dataIndex: "violation",
+      title: "Oxirgi texnik ko'rik",
+      dataIndex: "",
       key: "violation",
+        width: '10%',
+      render: (record ) => (
+        <span className="line-clamp-2">{dayjs(record?.employee?.end_date).format('YYYY-MM-DD HH:mm')}</span>
+      )
     },
     {
-      title: "Jarima vaqti",
-      dataIndex: "date",
+      title: "Kiyingi texnik ko'rik",
+      dataIndex: "",
       key: "date",
+        width: '10%',
+        render: (record) => (
+            <span className="line-clamp-2">{dayjs(record?.employee?.start_date).format('YYYY-MM-DD HH:mm')}</span>
+        )
     },
     {
-      title: "Jarima holati",
+      title: "Holati",
       key: "status",
       dataIndex: "status",
-      render: (text) => <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm">{text}</span>,
+        width: '12%',
+      render: (text) => text === '1' ?
+        <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm">Ko’rikdan o’tilgan</span>
+      : <span className="bg-red-200 text-red-600 px-3 py-1 rounded-full text-sm">Ko’rikdan o’tilmagan</span>,
     },
+    {
+        title: "Fayllar",
+        key: "files",
+        dataIndex: "files",
+        width: '20%',
+        render: (files) => (
+            files?.map((file, index) => (
+              <a  href={file}>
+
+              <div className="flex items-center   rounded-md ">
+                <div className="border p-2 text-red-600  text-xl rounded-md mr-2 flex items-center justify-center">
+                  <FilePdfOutlined  />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-800">Texnik ko‘rik 31.01.2025.pdf</p>
+                  <p className="text-xs text-gray-500">358 kb</p>
+                </div>
+              </div>
+              </a>
+            ))
+        ),
+    }
+    // {
+    //   title: "Amallar",
+    //   key: "action",
+    //   width: '5%',
+    //   render: (item) => {
+    //     return (
+    //       <Dropdown
+    //         overlayClassName="!w-[170px]"
+    //         trigger={["click"]}
+    //         menu={{
+    //           items: [
+    //             {
+    //               key: "1",
+    //               label: (
+    //                 <Button
+    //                   onClick={() => {
+    //                     setEditData(item);
+    //                     setShowModal(true);
+    //                   }}
+    //                   className="flex items-center gap-2 !mx-0 !w-full !px-4">
+    //                   <EditOutlined/>
+    //                   <span className="text-gray-500">Tahrirlash</span>
+    //                 </Button>
+    //               ),
+    //             },
+    //             {
+    //               key: "2",
+    //               label: (
+    //                 <Button onClick={() => handleDelete(item)} danger
+    //                         className="flex items-center gap-2 !mx-0 !w-full !px-4">
+    //                   <DeleteOutlined/>
+    //                   <span className="text-gray-500">O'chirish</span>
+    //                 </Button>
+    //               ),
+    //             },
+    //           ],
+    //         }}
+    //       >
+    //         <Button type="text" icon={<MoreOutlined/>}/>
+    //       </Dropdown>
+    //     );
+    //   },
+    // },
+
+
   ]
 
   return (
@@ -232,22 +291,24 @@ const VehicleCheck: React.FC = () => {
                 Yangi texnik ko'rik
               </Button>
             </div>
-              <TechnicalInspectionModal open={showModal} onCancel={() => {setShowModal(false)}}/>
           </div>
 
           <Table
+            loading={isLoading || isFetching}
             columns={columns}
-            dataSource={data}
+            dataSource={Array.isArray(data?.data) ? data.data : []}
+            rowKey="id"
             pagination={{
               position: ["bottomCenter"],
               showSizeChanger: true,
+              current: page,
+              pageSize: pageSize,
+              total: data?.total ?? 0,
               showQuickJumper: true,
-              total: 100,
               showTotal: (total) => `${total} ta`,
-              defaultPageSize: 10,
             }}
-
           />
+              <TechnicalInspectionModal refetch={refetch} editDate={null} open={showModal} onCancel={() => {setShowModal(false)}}/>
         </div>
       </div>
     </div>

@@ -10,5 +10,7 @@ export const types = `/types`
 export const uniforms = `/uniforms`
 export const categories = `/categories`
 export const employees = `/employees`
+export const reports = `/reports`
+export const techical = `/technical-inspections`
 
 

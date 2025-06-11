@@ -110,6 +110,7 @@ const Employee: React.FC = () => {
       key: "room",
       render: (room) => <div className="line-clamp-2">{room?.name}</div>,
       width: '17%',
+
     },
     {
       title: "Tug‘ilgan sana",

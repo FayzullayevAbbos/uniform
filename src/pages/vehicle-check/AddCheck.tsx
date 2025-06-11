@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Modal, Form, Select, DatePicker, Button, Typography, Upload } from "antd"
+import {Modal, Form, Select, DatePicker, Button, Typography, Upload, message} from "antd"
 import type { UploadFile } from "antd"
 
 const { Title, Text } = Typography
@@ -14,6 +14,8 @@ export default function TechnicalInspectionModal({ open, onCancel }: TechnicalIn
   const [form] = Form.useForm()
   const [fileList, setFileList] = useState<UploadFile[]>([])
 
+
+
   const handleSubmit = () => {
     form
       .validateFields()
@@ -27,18 +29,17 @@ export default function TechnicalInspectionModal({ open, onCancel }: TechnicalIn
   }
 
   const uploadProps = {
-    onRemove: (file: UploadFile) => {
-      const index = fileList.indexOf(file)
-      const newFileList = fileList.slice()
-      newFileList.splice(index, 1)
-      setFileList(newFileList)
+    beforeUpload: (file, fileList) => {
+      if (fileList.length > 1) {
+        message.error('Faqat bitta fayl yuklash mumkin!');
+        return Upload.LIST_IGNORE;
+      }
+      return true;
     },
-    beforeUpload: (file: UploadFile) => {
-      setFileList([...fileList, file])
-      return false
-    },
-    fileList,
-  }
+    multiple: false,
+    maxCount: 1,
+  };
+
 
   return (
     <Modal
@@ -73,8 +74,8 @@ export default function TechnicalInspectionModal({ open, onCancel }: TechnicalIn
           <Title level={5} style={{ marginBottom: 8 }}>
             Biriktirilgan fayllar
           </Title>
-          <Form.Item name="files">
-            <Dragger {...uploadProps} className={' '} style={{ padding: "16px 0" }}>
+          <Form.Item  name="files">
+            <Dragger  accept={'application/pdf'} {...uploadProps} className={' '} style={{ padding: "16px 0" }}>
               <p className="ant-upload-text">
                 Faylni bu yerga tashlang yoki <Text style={{ color: "#14b8a6" }}>kompyuterdan yuklang</Text>
               </p>

@@ -48,7 +48,7 @@ const Rooms: React.FC = () => {
   const handleDelete = (item: DataType) => {
     Modal.confirm({
       title: "Haqiqatan ham ushbu bo‘limni o‘chirmoqchimisiz?",
-      content: `${item.name} bo‘limi o‘chiriladi.`,
+      content: `${item.name}  o‘chiriladi.`,
       okText: "Ha, o‘chirish",
       cancelText: "Bekor qilish",
       okButtonProps: {danger: true},

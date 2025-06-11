@@ -9,6 +9,7 @@ import Rooms from "./pages/rooms/Rooms.tsx";
 import Positions from "./pages/positions/Positions.tsx";
 import Uniforms from "./pages/uniforms";
 import Login from "./pages/auth/Login..tsx";
+import Monitoring from "./pages/employee-monitoring/Monitoring.tsx";
 
 
 const routes_list = [
@@ -64,7 +65,7 @@ const routes_list = [
   },
   {
     path: '/employee-monitoring',
-    element: <div>Employee Monitoring</div>,
+    element: <Monitoring/>,
     children: false,
   },
   {
