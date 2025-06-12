@@ -1,12 +1,13 @@
 import React, {useState} from "react";
-import {Button, Dropdown, Input, message, Modal, Table,} from "antd";
-import {DeleteOutlined, EditOutlined, ExportOutlined, MoreOutlined, SearchOutlined,} from "@ant-design/icons";
+import {Button, Dropdown, message, Modal, Table,} from "antd";
+import {DeleteOutlined, EditOutlined, MoreOutlined, RightOutlined,} from "@ant-design/icons";
 import type {ColumnsType, SorterResult, TablePaginationConfig} from "antd/es/table";
 import dayjs from "dayjs";
 import useQuery from "../../hooks/useQuery.tsx";
 import AddAndEdit from "./AddAndEdit.tsx";
 import {useApiMutateMutation, useApiRequestQuery,} from "../../service/Api.tsx";
-import {departments, rooms} from "../../service/URLs.ts";
+import {departments, documents, rooms} from "../../service/URLs.ts";
+import {ArrowLeft} from "lucide-react";
 
 interface DataType {
   id?: string | number;
@@ -19,7 +20,7 @@ interface DataType {
   status: string;
 }
 
-const Rooms: React.FC = () => {
+const Documents: React.FC = () => {
   const {navigate} = useQuery();
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState(null);
@@ -31,7 +32,7 @@ const Rooms: React.FC = () => {
   const [mutate] = useApiMutateMutation();
 
   const {data, isLoading, refetch, isFetching} = useApiRequestQuery({
-    url: rooms,
+    url: documents,
     method: "GET",
     params: {
       page,
@@ -47,7 +48,7 @@ const Rooms: React.FC = () => {
 
   const handleDelete = (item: DataType) => {
     Modal.confirm({
-      title: "Haqiqatan ham ushbu Xonani o‘chirmoqchimisiz?",
+      title: "Haqiqatan ham ushbu bo‘limni o‘chirmoqchimisiz?",
       content: `${item.name}  o‘chiriladi.`,
       okText: "Ha, o‘chirish",
       cancelText: "Bekor qilish",
@@ -69,11 +70,31 @@ const Rooms: React.FC = () => {
 
   const columns: ColumnsType<DataType> = [
     {
-      title: "Xona nomi",
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+      width:'3%',
+    },
+    {
+      title: "Sarlavha",
       dataIndex: "name",
       key: "name",
       sorter: true,
+      width: '25%',
+        render: (text, record) => (
+            <span className={'line-clamp-2'}>{text}</span>
+        ),
 
+    },
+    {
+      title: "Xona raqami",
+      dataIndex: "description",
+      key: "description",
+      sorter: true,
+      width: '50%',
+        render: (text, record) => (
+            <span dangerouslySetInnerHTML={{__html:text}} className={'line-clamp-2'}></span>
+        ),
     },
     {
       title: "Qo'shilgan vaqti",
@@ -81,82 +102,14 @@ const Rooms: React.FC = () => {
       key: "created_at",
       render: (text) => <span>{dayjs(text).format("DD.MM.YYYY HH:mm")}</span>,
       sorter: true,
-      width: 200
-    },
-    {
-      title: "Xona raqami",
-      dataIndex: "room_number",
-      key: "number",
-      sorter: true,
-      width: 200
-    },
-    {
-      title: "Tartib raqami",
-      dataIndex: "order",
-      key: "order",
-      sorter: true,
-      width: 200
-    },
-    {
-      title: "Holati",
-      dataIndex: "is_active",
-      key: "is_active",
-      width: 200,
-      sorter: true,
-      render: (text) =>
-        text ? (
-          <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm">
-            Faol
-          </span>
-        ) : (
-          <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm">
-            Faol emas
-          </span>
-        ),
+      width: '15%',
     },
     {
       title: "Amallar",
       key: "actions",
-      width: 200,
+      width: '7%',
       render: (item) => (
-        <Dropdown
-          overlayClassName="!w-[170px]"
-          trigger={["click"]}
-          menu={{
-            items: [
-              {
-                key: "1",
-                label: (
-                  <Button
-                    onClick={() => {
-                      setEditData(item);
-                      setOpen(true);
-                    }}
-                    className="flex items-center gap-2 !w-full !px-4"
-                  >
-                    <EditOutlined/>
-                    <span className="text-gray-500">Tahrirlash</span>
-                  </Button>
-                ),
-              },
-              {
-                key: "2",
-                label: (
-                  <Button
-                    onClick={() => handleDelete(item)}
-                    danger
-                    className="flex items-center gap-2 !w-full !px-4"
-                  >
-                    <DeleteOutlined/>
-                    <span className="text-gray-500">O‘chirish</span>
-                  </Button>
-                ),
-              },
-            ],
-          }}
-        >
-          <Button type="text" icon={<MoreOutlined/>}/>
-        </Dropdown>
+        <Button onClick={()=>navigate(`/documents-and-guides/${item?.id}`)} type={'primary'}><RightOutlined/></Button>
       ),
     },
   ];
@@ -186,19 +139,19 @@ const Rooms: React.FC = () => {
           <div
             className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2 mb-2 border-b w-full">
             <div>
-              <Button type="default" icon={<ExportOutlined/>}>
-                Eksport qilish
-              </Button>
+              {/*<Button type="default" icon={<ExportOutlined/>}>*/}
+              {/*  Eksport qilish*/}
+              {/*</Button>*/}
             </div>
             <div className="flex gap-2 w-full md:w-auto">
-              <Input
-                placeholder="Qidirish"
-                prefix={<SearchOutlined className="text-gray-400"/>}
-                className="w-full md:w-[300px]"
-                onChange={(e) => setSearch(e.target.value)}
-              />
+              {/*<Input*/}
+              {/*  placeholder="Qidirish"*/}
+              {/*  prefix={<SearchOutlined className="text-gray-400"/>}*/}
+              {/*  className="w-full md:w-[300px]"*/}
+              {/*  onChange={(e) => setSearch(e.target.value)}*/}
+              {/*/>*/}
               <Button onClick={() => setOpen(true)} type="primary">
-                Xona qo‘shish
+                Yoriqnoma qo‘shish
               </Button>
             </div>
           </div>
@@ -221,7 +174,7 @@ const Rooms: React.FC = () => {
           />
 
           <AddAndEdit
-            editData={editData}
+            editData={null}
             open={open}
             onClose={() => {
               setOpen(false)
@@ -236,4 +189,4 @@ const Rooms: React.FC = () => {
   );
 };
 
-export default Rooms;
+export default Documents;

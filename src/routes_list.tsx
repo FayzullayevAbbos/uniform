@@ -10,6 +10,8 @@ import Positions from "./pages/positions/Positions.tsx";
 import Uniforms from "./pages/uniforms";
 import Login from "./pages/auth/Login..tsx";
 import Monitoring from "./pages/employee-monitoring/Monitoring.tsx";
+import Documents from "./pages/documents/Documents.tsx";
+import DocumentDetail from "./pages/documents/Detail.tsx";
 
 
 const routes_list = [
@@ -70,9 +72,13 @@ const routes_list = [
   },
   {
     path: '/documents-and-guides',
-    element: <div>Documents and Guides</div>,
+    element: <Documents/>,
     children: false,
   },
+  {
+    path: '/documents-and-guides/:id',
+    element: <DocumentDetail/>,
+  }
 ];
 
 

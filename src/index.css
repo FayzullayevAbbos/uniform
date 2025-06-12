@@ -35,3 +35,9 @@
     height: 150px !important;
     border-radius: 50% !important;
 }
+.tox-promotion-button{
+    display: none !important;
+}
+.tox-statusbar__path-item{
+    display: none !important;
+}
