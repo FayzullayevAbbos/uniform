@@ -54,7 +54,7 @@ const AddAndEdit: React.FC<AddSectionDrawerProps> = ({
       },
     });
 
-    if (isSuccess) {
+    if (res?.data) {
       form.resetFields();
       // @ts-ignore
       refetch();
