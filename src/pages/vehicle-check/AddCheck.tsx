@@ -86,3 +86,4 @@ export default function TechnicalInspectionModal({ open, onCancel }: TechnicalIn
     </Modal>
   )
 }
+
