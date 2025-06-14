@@ -1,45 +1,97 @@
-import { useState } from "react"
-import {Modal, Form, Select, DatePicker, Button, Typography, Upload, message} from "antd"
-import type { UploadFile } from "antd"
+import { useState } from "react";
+import type { UploadFile } from "antd";
+import {
+  Button,
+  DatePicker,
+  Form,
+  message,
+  Modal,
+  Select,
+  Typography,
+  Upload,
+} from "antd";
+import { employees, techical } from "../../service/URLs.ts";
+import {
+  useApiMutateMutation,
+  useApiRequestQuery,
+} from "../../service/Api.tsx";
 
-const { Title, Text } = Typography
-const { Dragger } = Upload
+const { Title, Text } = Typography;
+const { Dragger } = Upload;
 
 interface TechnicalInspectionModalProps {
-  open: boolean
-  onCancel: () => void
+  open: boolean;
+  onCancel: () => void;
+    refetch: () => void;
 }
 
-export default function TechnicalInspectionModal({ open, onCancel }: TechnicalInspectionModalProps) {
-  const [form] = Form.useForm()
-  const [fileList, setFileList] = useState<UploadFile[]>([])
+export default function TechnicalInspectionModal({
+                                                   open,
+                                                   onCancel,
+                                                    refetch,
+                                                 }: TechnicalInspectionModalProps) {
+  const [form] = Form.useForm();
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [mutate] = useApiMutateMutation();
 
-
+  const { data: employees_data } = useApiRequestQuery({
+    url: employees,
+    method: "GET",
+    params: {
+      page_size: 1000,
+    },
+  });
 
   const handleSubmit = () => {
     form
       .validateFields()
       .then((values) => {
-        console.log("Form values:", values)
-        onCancel()
+        const formData = new FormData();
+        formData.append("employee_id", values.status);
+        formData.append(
+          "start_date",
+          values.inspectionDate.format("YYYY-MM-DD")
+        );
+        formData.append(
+          "end_date",
+          values.expirationDate.format("YYYY-MM-DD")
+        );
+
+        if (fileList.length > 0) {
+          // formData.append("files", fileList);
+          fileList.forEach((file ,index) => {
+            formData.append(`files[${index}]`, file);
+          })
+        }
+
+        mutate({
+          url: techical,
+          method: "POST",
+          body: formData,
+        });
+
+        onCancel();
+        form.resetFields();
+        setFileList([]);
+        refetch();
       })
       .catch((info) => {
-        console.log("Validate Failed:", info)
-      })
-  }
-
-  const uploadProps = {
-    beforeUpload: (file, fileList) => {
-      if (fileList.length > 1) {
-        message.error('Faqat bitta fayl yuklash mumkin!');
-        return Upload.LIST_IGNORE;
-      }
-      return true;
-    },
-    multiple: false,
-    maxCount: 1,
+        console.log("Validate Failed:", info);
+      });
   };
 
+  const uploadProps = {
+    beforeUpload: (file: UploadFile) => {
+      setFileList([file]);
+      return false; // faylni avtomatik yuklash emas
+    },
+    onRemove: () => {
+      setFileList([]);
+    },
+    multiple: true,
+    fileList,
+
+  };
 
   return (
     <Modal
@@ -47,43 +99,84 @@ export default function TechnicalInspectionModal({ open, onCancel }: TechnicalIn
       open={open}
       onCancel={onCancel}
       footer={[
-        <Button key="submit" type="primary" onClick={handleSubmit} style={{ backgroundColor: "#14b8a6" }}>
+        <Button
+          key="submit"
+          type="primary"
+          onClick={handleSubmit}
+          style={{ backgroundColor: "#14b8a6" }}
+        >
           Yuborish
         </Button>,
       ]}
       width={500}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-        <Form.Item label="Holatini tanlang" name="status">
-          <Select size={'large'} placeholder="Tanlang">
-            <Select.Option value="option1">Option 1</Select.Option>
-            <Select.Option value="option2">Option 2</Select.Option>
-            <Select.Option value="option3">Option 3</Select.Option>
+        <Form.Item
+          label="Holatini tanlang"
+          name="status"
+          rules={[{ required: true, message: "Iltimos, xodimni tanlang" }]}
+        >
+          <Select size={"large"} placeholder="Tanlang">
+            {employees_data?.data?.map((employee) => (
+              <Select.Option key={employee.id} value={employee.id}>
+                {employee.first_name} {employee.last_name}
+              </Select.Option>
+            ))}
           </Select>
         </Form.Item>
 
-        <Form.Item label="Texnik ko'rikdan o'tgan sana" name="inspectionDate">
-          <DatePicker size={'large'} style={{ width: "100%" }} format="DD.MM.YYYY" placeholder="31.01.2025" />
+        <Form.Item
+          label="Texnik ko'rikdan o'tgan sana"
+          name="inspectionDate"
+          rules={[{ required: true, message: "Iltimos, sanani tanlang" }]}
+        >
+          <DatePicker
+            size={"large"}
+            style={{ width: "100%" }}
+            format="DD.MM.YYYY"
+            placeholder="31.01.2025"
+          />
         </Form.Item>
 
-        <Form.Item label="Texnik ko'rik amal qilish muddati" name="expirationDate">
-          <DatePicker size={'large'} style={{ width: "100%" }} format="DD.MM.YYYY" placeholder="31.01.2025" />
+        <Form.Item
+          label="Texnik ko'rik amal qilish muddati"
+          name="expirationDate"
+          rules={[{ required: true, message: "Iltimos, sanani tanlang" }]}
+        >
+          <DatePicker
+            size={"large"}
+            style={{ width: "100%" }}
+            format="DD.MM.YYYY"
+            placeholder="31.01.2025"
+          />
         </Form.Item>
 
         <div style={{ marginBottom: 16 }}>
           <Title level={5} style={{ marginBottom: 8 }}>
-            Biriktirilgan fayllar
+            Biriktirilgan fayl
           </Title>
-          <Form.Item  name="files">
-            <Dragger  accept={'application/pdf'} {...uploadProps} className={' '} style={{ padding: "16px 0" }}>
+          <Form.Item
+            name="files"
+            rules={[
+              {
+                required: true,
+                message: "Iltimos, fayl yuklang",
+              },
+            ]}
+          >
+            <Dragger
+              accept={"application/pdf"}
+              {...uploadProps}
+              style={{ padding: "16px 0" }}
+            >
               <p className="ant-upload-text">
-                Faylni bu yerga tashlang yoki <Text style={{ color: "#14b8a6" }}>kompyuterdan yuklang</Text>
+                Faylni bu yerga tashlang yoki{" "}
+                <Text style={{ color: "#14b8a6" }}>kompyuterdan yuklang</Text>
               </p>
             </Dragger>
           </Form.Item>
         </div>
       </Form>
     </Modal>
-  )
+  );
 }
-

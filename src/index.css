@@ -41,3 +41,9 @@
 .tox-statusbar__path-item{
     display: none !important;
 }
+a.pdf-link:hover div {
+    color: #3B82F6 !important; /* Tailwind blue-500 */
+}
+a.pdf-link:hover p {
+    color: #3B82F6 !important; /* Tailwind blue-500 */
+}

@@ -226,8 +226,7 @@ export default function EmployeeAddModal({open, onCancel, refetch, editData}: Em
   const handleNext = async () => {
     if (currentStep === 0) {
       try {
-        // await basicForm.validateFields()
-        console.log(basicForm.getFieldsValue())
+        await basicForm.validateFields()
         setBasicInfo(basicForm.getFieldsValue())
         setCurrentStep(currentStep + 1)
       } catch (error) {
@@ -236,7 +235,6 @@ export default function EmployeeAddModal({open, onCancel, refetch, editData}: Em
     } else if (currentStep === 1) {
       try {
         await positionForm.validateFields()
-        console.log(positionForm.getFieldsValue())
         setPositionInfo(positionForm.getFieldsValue())
         setCurrentStep(currentStep + 1)
       } catch (error) {
@@ -424,7 +422,7 @@ export default function EmployeeAddModal({open, onCancel, refetch, editData}: Em
             </Row>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label="Otasining ismi" name="middle_name">
+                <Form.Item rules={[{required:true , message:'Iltimos , '}]} label="Otasining ismi" name="middle_name">
                   <Input placeholder="Otasining ismi"/>
                 </Form.Item>
               </Col>
