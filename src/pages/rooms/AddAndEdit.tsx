@@ -29,12 +29,12 @@ const AddAndEdit: React.FC<AddSectionDrawerProps> = ({
   }, [editData, form]);
 
   const handleFinish = async (values: { id:number; name: string; room_number: number; order: number; is_active: boolean }) => {
-    await mutate({
+   const res =  await mutate({
       url: editData ? `${rooms}/${editData.id}` : rooms,
       method: editData ? 'PUT' : 'POST',
       body: {...values, is_active: values.is_active ? 1 : 0},
     })
-    if (isSuccess) {
+    if (res?.data) {
       form.resetFields();
       // @ts-ignore
       refetch();

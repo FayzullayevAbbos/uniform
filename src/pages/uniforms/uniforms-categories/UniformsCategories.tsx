@@ -106,6 +106,12 @@ const UniformsCategories: React.FC = () => {
       width:200
     },
     {
+      title:"Narxi (so'm)",
+        dataIndex: "price",
+        key: "price",
+        width:200,
+    },
+    {
       title: "Holati",
       dataIndex: "is_active",
       key: "is_active",

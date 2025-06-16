@@ -112,7 +112,7 @@ export default function TechnicalInspectionModal({
     >
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
         <Form.Item
-          label="Holatini tanlang"
+          label="Hodimni tanlang"
           name="status"
           rules={[{ required: true, message: "Iltimos, xodimni tanlang" }]}
         >

@@ -27,7 +27,7 @@ const AddAndEdit: React.FC<AddSectionDrawerProps> = ({
     }
   }, [editData, form]);
 
-  const handleFinish  = async (values: {id:number; name: string; order: number; is_active: boolean }) =>  {
+  const handleFinish  = async (values: {id:number; name: string; order: number; is_active: boolean , price:string}) =>  {
     const res = await  mutate({
       url: editData ? `${categories}/${editData.id}` : categories,
       method: editData ? 'PUT' : 'POST',
@@ -78,6 +78,13 @@ const AddAndEdit: React.FC<AddSectionDrawerProps> = ({
           <Input size={'large'} type="number" placeholder="Kiriting..."/>
         </Form.Item>
 
+        <Form.Item
+          label="Narxi (so'm)"
+          name="price"
+          rules={[{required: true, message: "Iltimos, narxni kiriting!"}]}
+        >
+          <Input size={'large'} type="number" placeholder="Kiriting..." />
+        </Form.Item>
         <Form.Item
           label="Holati"
           name="is_active"
