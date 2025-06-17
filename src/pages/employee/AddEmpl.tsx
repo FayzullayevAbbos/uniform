@@ -553,7 +553,6 @@ export default function EmployeeAddModal({open, onCancel, refetch, editData}: Em
                     name={`name_${index}`}
                     rules={[{required: true, message: "Iltimos, malumot kiriting"}]}
                     label="O‘quv nomi">
-                    {console.log(position.name)}
                     <Input
                       value={position.name}
                       onChange={(e) =>

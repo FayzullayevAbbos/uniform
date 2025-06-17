@@ -3,7 +3,7 @@ import { Button, Avatar, Tag, Space } from 'antd';
 import {  DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import BackTo from "../../components/shared/BackTo.tsx";
 
-const EmployeeDetailsTop = () => {
+const EmployeeDetailsTop = ({handleDelete  , setOpen , data}) => {
   return (
     <div className="">
       <div className="flex items-center justify-between">
@@ -14,10 +14,10 @@ const EmployeeDetailsTop = () => {
 
         {/* Right side */}
         <div className="flex gap-2">
-          <Button icon={<DeleteOutlined />} danger>
+          <Button onClick={handleDelete} icon={<DeleteOutlined />} danger>
             O‘chirish
           </Button>
-          <Button icon={<EditOutlined />} type="default">
+          <Button onClick={()=>setOpen(true)} icon={<EditOutlined />} type="default">
             O‘chirish
           </Button>
         </div>
@@ -27,14 +27,14 @@ const EmployeeDetailsTop = () => {
       <Avatar
         className="bg-blue-500"
         size={72}
-        src="https://img.freepik.com/free-photo/confident-young-male-doctor-with-stethoscope-hospital_1150-23460.jpg" // Shu rasmni o'xshash qilib oldim
+        src={data?.image || 'https://www.w3schools.com/howto/img_avatar.png'}
       />
       <div>
-        <div className="font-semibold text-lg">Eshonov Fakhriyor</div>
+        <div className="font-semibold text-lg">{data?.last_name} {data?.first_name}</div>
         <Space wrap>
-          <Tag>Terapevt</Tag>
-          <Tag>Shifokorlar bo‘limi</Tag>
-          <Tag>75-xona</Tag>
+          <Tag>{data?.position?.name}</Tag>
+          <Tag>{data?.department?.name}</Tag>
+          <Tag>{data?.room?.room_number}-xona</Tag>
         </Space>
       </div>
       </div>
