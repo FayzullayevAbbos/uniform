@@ -3,11 +3,12 @@ import {Button, Dropdown, Input, message, Modal, Table,} from "antd"
 import {DeleteOutlined, EditOutlined, ExportOutlined, MoreOutlined, SearchOutlined} from "@ant-design/icons"
 import type {ColumnsType, SorterResult, TablePaginationConfig} from "antd/es/table"
 import AddAndEdit from "./AddAndEdit.tsx";
-import FilterTop from "../../../components/Filter/FilterTop.tsx";
 import {PlusIcon} from "lucide-react";
 import {useApiMutateMutation, useApiRequestQuery} from "../../../service/Api.tsx";
 import dayjs from "dayjs";
-import {categories, uniforms} from "../../../service/URLs.ts";
+import {uniforms} from "../../../service/URLs.ts";
+import UniformFilter from "../../../components/Filter/UniformFilter.tsx";
+import useQuery from "../../../hooks/useQuery.tsx";
 
 interface DataType {
   id: string | number
@@ -20,6 +21,7 @@ interface DataType {
 }
 
 const UniformsDetail: React.FC = () => {
+  const {QueryParams} = useQuery();
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [page, setPage] = useState(1);
@@ -36,6 +38,7 @@ const UniformsDetail: React.FC = () => {
     params: {
       page,
       page_size: pageSize,
+      ...QueryParams,
       search,
       sort_by: sortField
         ? sortOrder === "desc"
@@ -170,7 +173,7 @@ const UniformsDetail: React.FC = () => {
   return (
     <div className=" min-h-screen w-full">
       <div className=" shadow-sm">
-        <FilterTop/>
+        <UniformFilter/>
         <div className={'bg-white border !w-full rounded-2xl mt-4  px-4 pt-4'}>
           <div
             className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4  pb-2 mb-2 border-b !w-full  ">

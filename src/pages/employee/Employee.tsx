@@ -15,6 +15,7 @@ import useQuery from "../../hooks/useQuery.tsx";
 import EmployeeAddModal from "./AddEmpl.tsx";
 import {useApiMutateMutation, useApiRequestQuery} from "../../service/Api.tsx";
 import {employees} from "../../service/URLs.ts";
+import FilterTop from "../../components/Filter/FilterTop.tsx";
 
 const {RangePicker} = DatePicker
 const {Option} = Select
@@ -31,7 +32,7 @@ interface DataType {
 }
 
 const Employee: React.FC = () => {
-  const {navigate} = useQuery()
+  const {navigate , QueryParams} = useQuery()
   const [showModal, setShowModal] = useState(false)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -45,6 +46,7 @@ const Employee: React.FC = () => {
     method: "GET",
     params: {
       page,
+      ...QueryParams,
       page_size: pageSize,
       search,
       sort_by: sortField
@@ -189,44 +191,7 @@ const Employee: React.FC = () => {
   return (
     <div className=" min-h-screen w-full">
       <div className=" shadow-sm">
-        <div className="flex flex-col bg-white border !w-full rounded-2xl   px-4 pt-4">
-          <div className={'flex items-center  gap-4  pb-3 !text-3xl   !w-full  '}>
-            <FilterOutlined className={'!text-3xl '}/>
-            <Title className=" text-gray-500 align-text-bottom !m-0 !text-3xl ">
-              Filter
-            </Title>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 ">
-            <div>
-              <Text className="block mb-2 text-gray-500">HODIMLAR BO'YICHA</Text>
-              <Select placeholder="Barcha hodimlar" className="w-full">
-                <Option value="all">Barcha hodimlar</Option>
-              </Select>
-            </div>
-            <div>
-              <Text className="block mb-2 text-gray-500">BO'LIMLAR BO'YICHA</Text>
-              <Select placeholder="Barchasi" className="w-full">
-                <Option value="all">Barchasi</Option>
-              </Select>
-            </div>
-            <div>
-              <Text className="block mb-2 text-gray-500">HOLATI BO'YICHA</Text>
-              <Select placeholder="Barchasi" className="w-full">
-                <Option value="all">Barchasi</Option>
-              </Select>
-            </div>
-            <div className="!w-full">
-              <Text className="block mb-2 text-gray-500">SANA</Text>
-              <RangePicker
-
-                className="w-full"
-                defaultValue={[dayjs("2025-01-30"), dayjs("2025-01-30")]}
-                format="DD.MM.YYYY"
-              />
-            </div>
-          </div>
-        </div>
+        <FilterTop/>
         <div className={'bg-white border !w-full rounded-2xl mt-4  px-4 pt-4'}>
           <div
             className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4  pb-2 mb-2 border-b !w-full  ">

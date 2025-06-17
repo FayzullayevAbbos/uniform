@@ -7,6 +7,8 @@ import TechnicalInspectionModal from "./AddCheck.tsx";
 import { techical } from "../../service/URLs.ts";
 import { useApiMutateMutation, useApiRequestQuery } from "../../service/Api.tsx";
 import FilterTop from "../../components/Filter/FilterTop.tsx";
+import TechinkFilter from "../../components/Filter/TechinkFilter.tsx";
+import useQuery from "../../hooks/useQuery.tsx";
 
 const { RangePicker } = DatePicker;
 
@@ -61,6 +63,7 @@ const VehicleCheck: React.FC<VehicleCheckProps> = ({ emp_id }) => {
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<string | null>(null);
   const [mutate] = useApiMutateMutation();
+  const {QueryParams} = useQuery()
 
   const { data, isLoading, refetch, isFetching } = useApiRequestQuery({
     url: techical,
@@ -69,7 +72,8 @@ const VehicleCheck: React.FC<VehicleCheckProps> = ({ emp_id }) => {
       page,
       page_size: pageSize,
       search,
-      employee_id: emp_id,
+      ...QueryParams,
+      ...(emp_id ? { employee_id: emp_id } : {}),
       sort_by: sortField
         ? sortOrder === "desc"
           ? `-${sortField}`
@@ -200,7 +204,7 @@ const VehicleCheck: React.FC<VehicleCheckProps> = ({ emp_id }) => {
   return (
     <div className="min-h-screen w-full">
       <div className="shadow-sm">
-        {emp_id && <FilterTop />}
+        {!emp_id && <TechinkFilter />}
         <div className="bg-white border !w-full rounded-2xl mt-4 px-4 pt-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2 mb-2 border-b !w-full">
             <div className="gap-2 w-full md:w-auto">

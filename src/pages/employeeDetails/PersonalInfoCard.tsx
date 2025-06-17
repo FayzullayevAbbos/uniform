@@ -57,7 +57,7 @@ const PersonalInfoCard: React.FC = ({loading, data}: any) => {
                 <div className="mb-1">
                   <Title level={5} className="!mb-0">{info?.name}</Title>
                   <Text type="secondary" className="block mb-2"> Daraja: {info?.type === 'higher' ? "Oliy " : info?.type === 'secondary' ? "O'rta" : "Maxsus"}</Text>
-                  <Tag color="cyan" className="px-3 py-1  rounded-full text-base">
+                  <Tag color="cyan" className="px-3 py-1  rounded-full text-[12px]">
                     {dayjs(info?.start_date).format("D-MMMM YYYY")}  - {dayjs(info?.end_date).format("D-MMMM YYYY")}
                   </Tag>
                 </div>
