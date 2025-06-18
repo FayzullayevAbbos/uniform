@@ -27,7 +27,7 @@ const ProfileInfo: React.FC<AddSectionDrawerProps> = ({ open, onClose }) => {
       open={open}
       width={400}
     >
-      <div className="p-4 flex flex-col items-center">
+      <div className="p-4 flex flex-col items-center settings">
         <Image
           src={user.image}
           alt="User Avatar"

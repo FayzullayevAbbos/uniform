@@ -52,14 +52,14 @@ const EditProfileDrawer: React.FC<EditProfileDrawerProps> = ({
 
   return (
     <Drawer
-      title={<span className="font-semibold text-lg">Maʼlumotlarni tahrirlash</span>}
+      title={<span className="font-semibold text-lg ">Maʼlumotlarni tahrirlash</span>}
       width={400}
       onClose={onClose}
       open={open}
     >
       <div className="text-center mb-4">
         {preview ? (
-          <div className="relative w-fit mx-auto">
+          <div className="relative w-fit mx-auto settings">
             <Image
               src={preview}
               alt="Avatar"

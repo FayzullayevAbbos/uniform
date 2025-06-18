@@ -8,6 +8,7 @@ import {RootState} from "../../store/store.ts";
 import ProfileInfo from "../settings/ProfileInfo.tsx";
 import EditProfile from "../settings/EditProfile.tsx";
 import {useNavigate} from "react-router-dom";
+import UpdatePassword from "../settings/UpdatePassword.tsx";
 
 
 interface HeaderProps {
@@ -19,6 +20,7 @@ const Header: React.FC<HeaderProps> = ({title}) => {
   const navigate = useNavigate();
   const [profileIsOpen, setProfileIsOpen] = React.useState(false);
   const [editProfileIsOpen, setEditProfileIsOpen] = React.useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = React.useState(false);
   const collapsed = useSelector((state: RootState) => state.profile.collapsed);
 
   const items: MenuProps['items'] = [
@@ -46,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({title}) => {
     {
       key: 'change-password',
       label: (
-        <div className="flex items-center">
+        <div  onClick={()=>setChangePasswordOpen(true)} className="flex items-center">
           <Lock size={16} className="mr-2"/>
           Parol o'zgartirish
         </div>
@@ -72,6 +74,7 @@ const Header: React.FC<HeaderProps> = ({title}) => {
 
   return (
     <>
+      <UpdatePassword open={changePasswordOpen} onClose={()=> setChangePasswordOpen(false)} />
       <ProfileInfo open={profileIsOpen} onClose={() => setProfileIsOpen(false)} refetch={() => {}}/>
       <EditProfile userData={{
         fullName: 'Fayzullayev Abbos',
