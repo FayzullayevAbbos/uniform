@@ -9,6 +9,7 @@ import dayjs from "dayjs";
 import {uniforms} from "../../../service/URLs.ts";
 import UniformFilter from "../../../components/Filter/UniformFilter.tsx";
 import useQuery from "../../../hooks/useQuery.tsx";
+import Export from "../../../components/export/Export.tsx";
 
 interface DataType {
   id: string | number
@@ -178,9 +179,7 @@ const UniformsDetail: React.FC = () => {
           <div
             className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4  pb-2 mb-2 border-b !w-full  ">
             <div className=" gap-2 w-full md:w-auto">
-              <Button type="default" icon={<ExportOutlined/>} className="flex items-center">
-                Eksport qilish
-              </Button>
+             <Export url={'/uniform-export'}/>
             </div>
             <div className="flex gap-2 w-full md:w-auto">
               <Input

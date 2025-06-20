@@ -9,7 +9,7 @@ interface UpdatePasswordDrawerProps {
 
 const UpdatePassword: React.FC<UpdatePasswordDrawerProps> = ({ open, onClose }) => {
   const [form] = Form.useForm();
-  const [mutate,{isSuccess}] = useApiMutateMutation()
+  const [mutate] = useApiMutateMutation()
 
   const handleFinish = async (values: any) => {
     const formData = new FormData();
@@ -22,7 +22,7 @@ const UpdatePassword: React.FC<UpdatePasswordDrawerProps> = ({ open, onClose }) 
         method: 'POST',
         body: formData,
     })
-    if (isSuccess){
+    if (res?.data){
         message.success("Parol muvaffaqiyatli yangilandi");
        form.resetFields();
       onClose();

@@ -22,6 +22,7 @@ import {
   useApiRequestQuery,
 } from "../../service/Api.tsx";
 import { departments } from "../../service/URLs.ts";
+import Export from "../../components/export/Export.tsx";
 
 interface DataType {
   id?: string | number;
@@ -192,9 +193,7 @@ const Departments: React.FC = () => {
         <div className="bg-white border w-full rounded-2xl mt-4 px-4 pt-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2 mb-2 border-b w-full">
             <div>
-              <Button type="default" icon={<ExportOutlined />}>
-                Eksport qilish
-              </Button>
+              <Export url={'/department-export'}/>
             </div>
             <div className="flex gap-2 w-full md:w-auto">
               <Input

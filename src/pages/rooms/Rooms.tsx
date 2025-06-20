@@ -7,6 +7,7 @@ import useQuery from "../../hooks/useQuery.tsx";
 import AddAndEdit from "./AddAndEdit.tsx";
 import {useApiMutateMutation, useApiRequestQuery,} from "../../service/Api.tsx";
 import {departments, rooms} from "../../service/URLs.ts";
+import Export from "../../components/export/Export.tsx";
 
 interface DataType {
   id?: string | number;
@@ -186,9 +187,7 @@ const Rooms: React.FC = () => {
           <div
             className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2 mb-2 border-b w-full">
             <div>
-              <Button type="default" icon={<ExportOutlined/>}>
-                Eksport qilish
-              </Button>
+              <Export url={'/room-export'}/>
             </div>
             <div className="flex gap-2 w-full md:w-auto">
               <Input

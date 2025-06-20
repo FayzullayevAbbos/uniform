@@ -8,6 +8,7 @@ import AddAndEdit from "../rooms/AddAndEdit.tsx";
 import {useApiMutateMutation, useApiRequestQuery,} from "../../service/Api.tsx";
 import {departments, reports, rooms} from "../../service/URLs.ts";
 import FilterTop from "../../components/Filter/FilterTop.tsx";
+import Export from "../../components/export/Export.tsx";
 
 type Department = {
   id: number;
@@ -143,9 +144,7 @@ const Monitoring: React.FC = () => {
           <div
             className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2 mb-2 border-b w-full">
             <div>
-              <Button type="default" icon={<ExportOutlined/>}>
-                Eksport qilish
-              </Button>
+              <Export url={'/report-export'}/>
             </div>
             <div className="flex gap-2 w-full md:w-auto">
               <Input

@@ -16,6 +16,7 @@ import EmployeeAddModal from "./AddEmpl.tsx";
 import {useApiMutateMutation, useApiRequestQuery} from "../../service/Api.tsx";
 import {employees} from "../../service/URLs.ts";
 import FilterTop from "../../components/Filter/FilterTop.tsx";
+import Export from "../../components/export/Export.tsx";
 
 const {RangePicker} = DatePicker
 const {Option} = Select
@@ -196,9 +197,7 @@ const Employee: React.FC = () => {
           <div
             className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4  pb-2 mb-2 border-b !w-full  ">
             <div className=" gap-2 w-full md:w-auto">
-              <Button type="default" icon={<ExportOutlined/>} className="flex items-center">
-                Eksport qilish
-              </Button>
+              <Export url={'/employee-export'}/>
             </div>
             <div className="flex gap-2 w-full md:w-auto">
               <Input

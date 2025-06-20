@@ -1,16 +1,16 @@
-import React, { useState } from "react";
-import { Avatar, Button, DatePicker, Input, message, Modal, Select, Table, Typography } from "antd";
-import { ExportOutlined, FilePdfOutlined, SearchOutlined } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
+import React, {useState} from "react";
+import {Avatar, Button, DatePicker, Input, message, Modal, Table} from "antd";
+import {FilePdfOutlined, SearchOutlined} from "@ant-design/icons";
+import type {ColumnsType} from "antd/es/table";
 import dayjs from "dayjs";
 import TechnicalInspectionModal from "./AddCheck.tsx";
-import { techical } from "../../service/URLs.ts";
-import { useApiMutateMutation, useApiRequestQuery } from "../../service/Api.tsx";
-import FilterTop from "../../components/Filter/FilterTop.tsx";
+import {techical} from "../../service/URLs.ts";
+import {useApiMutateMutation, useApiRequestQuery} from "../../service/Api.tsx";
 import TechinkFilter from "../../components/Filter/TechinkFilter.tsx";
 import useQuery from "../../hooks/useQuery.tsx";
+import Export from "../../components/export/Export.tsx";
 
-const { RangePicker } = DatePicker;
+const {RangePicker} = DatePicker;
 
 type Department = {
   id: number;
@@ -55,7 +55,7 @@ interface VehicleCheckProps {
   emp_id: number | undefined;
 }
 
-const VehicleCheck: React.FC<VehicleCheckProps> = ({ emp_id }) => {
+const VehicleCheck: React.FC<VehicleCheckProps> = ({emp_id}) => {
   const [showModal, setShowModal] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -65,7 +65,7 @@ const VehicleCheck: React.FC<VehicleCheckProps> = ({ emp_id }) => {
   const [mutate] = useApiMutateMutation();
   const {QueryParams} = useQuery()
 
-  const { data, isLoading, refetch, isFetching } = useApiRequestQuery({
+  const {data, isLoading, refetch, isFetching} = useApiRequestQuery({
     url: techical,
     method: "GET",
     params: {
@@ -73,7 +73,7 @@ const VehicleCheck: React.FC<VehicleCheckProps> = ({ emp_id }) => {
       page_size: pageSize,
       search,
       ...QueryParams,
-      ...(emp_id ? { employee_id: emp_id } : {}),
+      ...(emp_id ? {employee_id: emp_id} : {}),
       sort_by: sortField
         ? sortOrder === "desc"
           ? `-${sortField}`
@@ -88,7 +88,7 @@ const VehicleCheck: React.FC<VehicleCheckProps> = ({ emp_id }) => {
       content: `${item?.employee?.first_name} o‘chiriladi.`,
       okText: "Ha, o‘chirish",
       cancelText: "Bekor qilish",
-      okButtonProps: { danger: true },
+      okButtonProps: {danger: true},
       onOk: async () => {
         try {
           await mutate({
@@ -112,7 +112,7 @@ const VehicleCheck: React.FC<VehicleCheckProps> = ({ emp_id }) => {
       width: "15%",
       render: (text, record) => (
         <div className="flex items-center gap-2">
-          <Avatar src={record?.employee?.image} />
+          <Avatar src={record?.employee?.image}/>
           <span>
           {record?.employee?.first_name} {record?.employee?.last_name}
         </span>
@@ -165,7 +165,7 @@ const VehicleCheck: React.FC<VehicleCheckProps> = ({ emp_id }) => {
       dataIndex: "status",
       width: "12%",
       render: (text) =>
-        text === "1" ? (
+        text === 1 ? (
           <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm">
           Ko’rikdan o’tilgan
         </span>
@@ -185,7 +185,7 @@ const VehicleCheck: React.FC<VehicleCheckProps> = ({ emp_id }) => {
           <a className="pdf-link" target={"_blank"} href={file?.path} key={index}>
             <div className="flex items-center rounded-md">
               <div className="border p-2 text-red-600 text-xl rounded-md mr-2 flex items-center justify-center">
-                <FilePdfOutlined />
+                <FilePdfOutlined/>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-800">
@@ -204,18 +204,23 @@ const VehicleCheck: React.FC<VehicleCheckProps> = ({ emp_id }) => {
   return (
     <div className="min-h-screen w-full">
       <div className="shadow-sm">
-        {!emp_id && <TechinkFilter />}
+        {!emp_id && <TechinkFilter/>}
         <div className="bg-white border !w-full rounded-2xl mt-4 px-4 pt-4">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2 mb-2 border-b !w-full">
+          <div
+            className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2 mb-2 border-b !w-full">
             <div className="gap-2 w-full md:w-auto">
-              <Button type="default" icon={<ExportOutlined />} className="flex items-center">
-                Eksport qilish
-              </Button>
+              {/*<Button type="default" icon={<ExportOutlined />} className="flex items-center">*/}
+              {/*  Eksport qilish*/}
+              {/*</Button>*/}
+              {
+                emp_id ? <Export url={`/employee-technical-export/${emp_id}/`}/> :
+                  <Export url={'/technical-inspection-export'}/>
+              }
             </div>
             <div className="flex gap-2 w-full md:w-auto">
               <Input
                 placeholder="Qidirish"
-                prefix={<SearchOutlined className="text-gray-400" />}
+                prefix={<SearchOutlined className="text-gray-400"/>}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full md:w-[300px]"
               />

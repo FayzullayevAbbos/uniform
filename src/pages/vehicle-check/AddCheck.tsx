@@ -1,20 +1,8 @@
-import { useState } from "react";
-import type { UploadFile } from "antd";
-import {
-  Button,
-  DatePicker,
-  Form,
-  message,
-  Modal,
-  Select,
-  Typography,
-  Upload,
-} from "antd";
-import { employees, techical } from "../../service/URLs.ts";
-import {
-  useApiMutateMutation,
-  useApiRequestQuery,
-} from "../../service/Api.tsx";
+import {useState} from "react";
+import {message, UploadFile} from "antd";
+import {Button, DatePicker, Form, Modal, Select, Typography, Upload,} from "antd";
+import {employees, techical} from "../../service/URLs.ts";
+import {useApiMutateMutation, useApiRequestQuery,} from "../../service/Api.tsx";
 
 const { Title, Text } = Typography;
 const { Dragger } = Upload;
@@ -42,10 +30,10 @@ export default function TechnicalInspectionModal({
     },
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     form
       .validateFields()
-      .then((values) => {
+      .then(async (values) => {
         const formData = new FormData();
         formData.append("employee_id", values.status);
         formData.append(
@@ -63,17 +51,21 @@ export default function TechnicalInspectionModal({
             formData.append(`files[${index}]`, file);
           })
         }
-
-        mutate({
+        const res = await  mutate({
           url: techical,
           method: "POST",
           body: formData,
         });
+           if (res?.data){
+            message.success("Texnik ko'rik muvaffaqiyatli qo'shildi");
+            onCancel()
+            form.resetFields();
+            setFileList([]);
+            refetch();
+           }else {
+            message.error("Texnik ko'rik qo'shishda xatolik yuz berdi");
+           }
 
-        onCancel();
-        form.resetFields();
-        setFileList([]);
-        refetch();
       })
       .catch((info) => {
         console.log("Validate Failed:", info);
