@@ -19,7 +19,8 @@ export const UniformService = createApi({
         return { method, url, body, params,};
       },
       //dont cache this query
-        keepUnusedDataFor: 0,
+      keepUnusedDataFor: 0,
+      forceRefetch: () => true,
     }),
     ApiMutate: builder.mutation({
       query: ({method, url, body, params}) => {

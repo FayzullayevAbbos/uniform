@@ -18,7 +18,7 @@ const EmployeeDetailsTop = ({handleDelete  , setOpen , data}) => {
             O‘chirish
           </Button>
           <Button onClick={()=>setOpen(true)} icon={<EditOutlined />} type="default">
-            O‘chirish
+            Tahrirlash
           </Button>
         </div>
       </div>

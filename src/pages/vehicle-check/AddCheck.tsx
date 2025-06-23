@@ -133,7 +133,18 @@ export default function TechnicalInspectionModal({
         <Form.Item
           label="Texnik ko'rik amal qilish muddati"
           name="expirationDate"
-          rules={[{ required: true, message: "Iltimos, sanani tanlang" }]}
+          rules={[
+            { required: true, message: "Iltimos, sanani tanlang" },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                const startDate = getFieldValue("inspectionDate");
+                if (!value || !startDate || startDate.isBefore(value)) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error("Amal qilish muddati o'tgan sanadan katta bo'lishi kerak"));
+              },
+            }),
+          ]}
         >
           <DatePicker
             size={"large"}
