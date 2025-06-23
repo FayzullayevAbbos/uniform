@@ -314,7 +314,9 @@ export default function EmployeeAddModal({open, onCancel, refetch, editData}: Em
       Object.entries(basicInfo).forEach(([key, value]) => {
         if (value == null) return; // Skip undefined and null
         if (key === 'birth_date' && value) {
+          // @ts-ignore
           const formattedDate = dayjs(value).isValid()
+          // @ts-ignore
             ? dayjs(value).format('YYYY-MM-DD')
             : value;
           formData.append(key, formattedDate);

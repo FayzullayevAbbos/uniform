@@ -6,7 +6,7 @@ export const UniformService = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: baseUrl,
     prepareHeaders: (headers) => {
-      const access_token = localStorage.getItem("accessToken");
+      const access_token = localStorage.getItem("token");
       if (access_token) {
         headers.set("Authorization", `Bearer ${access_token}`);
       }
