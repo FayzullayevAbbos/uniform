@@ -56,7 +56,7 @@ const Rooms: React.FC = () => {
       onOk: async () => {
         try {
           await mutate({
-            url: `${departments}/${item?.id}/`,
+            url: `${rooms}/${item?.id}/`,
             method: "DELETE",
           });
           message.success("Muvaffaqiyatli o‘chirildi");

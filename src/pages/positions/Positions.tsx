@@ -71,7 +71,7 @@ const Positions: React.FC = () => {
       onOk: async () => {
         try {
           await mutate({
-            url: `${departments}/${item?.id}/`,
+            url: `${positions}/${item?.id}/`,
             method: "DELETE",
           });
           message.success("Muvaffaqiyatli o‘chirildi");
